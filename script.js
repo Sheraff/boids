@@ -152,11 +152,13 @@ for (let index = 0; index < 100; index++) {
 // 	}))
 // }
 
-let lastX, lastY
+let lastX, lastY, hover
 canvas.addEventListener('mousemove', ({x, y}) => {
 	lastX = x
 	lastY = y
 })
+canvas.addEventListener('mouseenter', () => hover = true)
+canvas.addEventListener('mouseleave', () => hover = false)
 
 function drawPoint(ctx, x, y, color = 'black') {
 	const size = 3
@@ -195,10 +197,12 @@ function update(ctx) {
 		boid.update({points: [...boids, cursor], box: ctx.canvas})
 		boid.draw(ctx)
 	})
-	cursor.x = lastX
-	cursor.y = lastY
-	cursor.update({points: boids, box: ctx.canvas})
-	cursor.draw(ctx, { withField: true })
+	if(hover) {
+		cursor.x = lastX
+		cursor.y = lastY
+		cursor.update({points: boids, box: ctx.canvas})
+		cursor.draw(ctx, { withField: true })
+	}
 }
 
 function loop() {
