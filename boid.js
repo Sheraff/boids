@@ -20,8 +20,9 @@ export default class Boid {
 			radius: 100,
 			radians: 3 / 2 * Math.PI // > 0; < 2𝜋
 		}
-		this.linearSpeed = Math.random() + 2
+		this.linearSpeed = 2.5 + Math.random() * 0
 		this.angularSpeed = 0
+		this.maxAngularSpeed = (Math.PI * 2) / 45 * (Math.random() + 1) // lower max angular speed leads to more predictable patterns
 		this.behaviors = {
 			'repulsion from individuals': .1,
 			'imitation of direction': .06,
@@ -135,7 +136,7 @@ export default class Boid {
 			}
 		}
 
-		this.angularSpeed = Math.sign(this.angularSpeed) * Math.min(Math.PI / 15, Math.abs(this.angularSpeed))
+		this.angularSpeed = Math.sign(this.angularSpeed) * Math.min(this.maxAngularSpeed, Math.abs(this.angularSpeed))
 		this.angle += this.angularSpeed
 
 		x -= Math.sin(this.angle) * this.linearSpeed
