@@ -158,14 +158,14 @@ export default class Boid {
 			if(point === this)
 				return false
 			const distance = Math.sqrt((point.x - this.x)**2 + (point.y - this.y)**2)
-			return distance < this.size*2
+			return distance < this.size + point.size
 				&& this.testPointVisibility({x: point.x, y: point.y, side: 'left'})
 		})
 		const closestRight = points.filter(point => {
 			if(point === this)
 				return false
 			const distance = Math.sqrt((point.x - this.x)**2 + (point.y - this.y)**2)
-			return distance < this.size*2
+			return distance < this.size + point.size
 				&& this.testPointVisibility({x: point.x, y: point.y, side: 'right'})
 		})
 
@@ -203,12 +203,10 @@ export default class Boid {
 	findDensityDirection(points) {
 		const leftView = points.filter(point => 
 			point !== this 
-			&& Math.sqrt((point.x - this.x)**2 + (point.y - this.y)**2) > 2*this.size
 			&& this.testPointVisibility({x: point.x, y: point.y, side: 'left'})
 		)
 		const rightView = points.filter(point => 
 			point !== this 
-			&& Math.sqrt((point.x - this.x)**2 + (point.y - this.y)**2) > 2*this.size
 			&& this.testPointVisibility({x: point.x, y: point.y, side: 'right'})
 		)
 		
