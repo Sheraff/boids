@@ -12,11 +12,12 @@ const cursor = new Boid({
 	x: 450,
 	y: 100,
 	angle: 0,
-	color: 'purple'
+	color: 'purple',
+	size: 40,
 })
 const boids = []
 
-for (let index = 0; index < 100; index++) {
+for (let index = 0; index < 200; index++) {
 	const boid = new Boid({
 		x: Math.random() * ctx.canvas.width,
 		y: Math.random() * ctx.canvas.height,

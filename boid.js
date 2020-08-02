@@ -7,13 +7,14 @@ export default class Boid {
 		angle = 0,
 		x = 0,
 		y = 0,
-		color = 'green'
+		color = 'green',
+		size,
 	}) {
 		this.angle = angle // > 0; < 2𝜋
 		this.x = x
 		this.y = y
 		this.color = color
-		this.size = 20
+		this.size = size || 15 + Math.random() * 10 // 20
 		this.width = .6 // radians
 		this.vision = {
 			radius: 100,
@@ -193,8 +194,13 @@ export default class Boid {
 		// 	return { angle: median, count: inView.length }
 		// }
 
-		const atan2X = inView.reduce((sum, {angle}) => sum + Math.sin(angle), 0) / inView.length
-		const atan2Y = inView.reduce((sum, {angle}) => sum + Math.cos(angle), 0) / inView.length
+		// const atan2X = inView.reduce((sum, {angle}) => sum + Math.sin(angle), 0) / inView.length
+		// const atan2Y = inView.reduce((sum, {angle}) => sum + Math.cos(angle), 0) / inView.length
+
+		// weighted by size
+		const atan2X = inView.reduce((sum, {angle, size}) => sum + Math.sin(angle) * size, 0) / inView.reduce((sum, {size}) => sum + size, 0)
+		const atan2Y = inView.reduce((sum, {angle, size}) => sum + Math.cos(angle) * size, 0) / inView.reduce((sum, {size}) => sum + size, 0)
+
 		const realAngleMean = Math.atan2(atan2X, atan2Y)
 		const angleMinus = realAngleMean - this.angle
 		const anglePlus = (realAngleMean + Math.PI *2) - this.angle
@@ -217,7 +223,12 @@ export default class Boid {
 		if(!leftView.length && !rightView.length)
 			return false
 
-		return Math.sign(leftView.length - rightView.length)
+		// return Math.sign(leftView.length - rightView.length)
+
+		// weighted by size
+		const leftWeight = leftView.reduce((sum, {size}) => sum + size, 0)
+		const rightWeight = rightView.reduce((sum, {size}) => sum + size, 0)
+		return Math.sign(leftWeight - rightWeight)
 	}
 
 	testWallVisibility({height, width}) {
