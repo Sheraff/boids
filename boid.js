@@ -20,8 +20,8 @@ export default class Boid {
 			radius: 100,
 			radians: 5 / 4 * Math.PI // > 0; < 2𝜋
 		}
-		this.linearSpeed = .1
-		this.minLinearSpeed = .1
+		this.minLinearSpeed = .2
+		this.linearSpeed = this.minLinearSpeed
 		const maxLinearSpeedBoost = speed || Math.random()
 		this.maxLinearSpeed = 2 + maxLinearSpeedBoost * 1
 		this.angularSpeed = 0
@@ -29,7 +29,7 @@ export default class Boid {
 		this.maxAngularSpeed = (Math.PI * 2) / 45 * (maxAngularSpeedBoost + 1) // lower max angular speed leads to more predictable patterns
 		this.behaviors = {
 			'obstacle avoidance': 2,
-			'repulsion from individuals': .2,
+			'repulsion from individuals': .25,
 			'imitation of direction': .075,
 			'attraction to group': .025,
 		}
@@ -81,7 +81,7 @@ export default class Boid {
 			this.drawingAngle -= Math.PI * 2
 
 		const direction = Math.sign(this.angle - this.drawingAngle)
-		const difference = Math[direction ? 'min' : 'max'](Math.abs(this.angle - this.drawingAngle), (Math.PI * 2) / 50)
+		const difference = Math[direction ? 'min' : 'max'](Math.abs(this.angle - this.drawingAngle), (Math.PI * 2) / 45)
 		this.drawingAngle += direction * difference
 		this.drawingAngle = this.drawingAngle % (Math.PI * 2)
 	}
@@ -103,10 +103,11 @@ export default class Boid {
 	drawTriangle(ctx) {
 		ctx.fillStyle = this.color
 		ctx.beginPath()
-		const centerX = Math.sin(this.drawingAngle) * this.size / 2
-		const centerY = Math.cos(this.drawingAngle) * this.size / 2
-		const hypotenuse = Math.sqrt(this.size**2 + (this.width/2)**2)
-		const halfAngle = Math.asin(this.width / this.size / 2)
+		const drawSize = this.size * .9
+		const centerX = Math.sin(this.drawingAngle) * drawSize / 2
+		const centerY = Math.cos(this.drawingAngle) * drawSize / 2
+		const hypotenuse = Math.sqrt(drawSize**2 + (this.width/2)**2)
+		const halfAngle = Math.asin(this.width / drawSize / 2)
 		ctx.moveTo(
 			this.x - centerX, 
 			this.y - centerY,
@@ -159,7 +160,7 @@ export default class Boid {
 			const tooClose = this.findClosest(points)
 			if(tooClose) {
 				this.angularSpeed += tooClose * this.behaviors['repulsion from individuals']
-				this.linearSpeed -= .035
+				this.linearSpeed -= .03
 			}
 
 			const result = this.findGroupDirection(points)
