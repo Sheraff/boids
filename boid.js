@@ -14,20 +14,20 @@ export default class Boid {
 		this.x = x
 		this.y = y
 		this.color = color
-		this.size = size || 15 + Math.random() * 10 // 20
-		this.width = .6 // radians
+		this.size = size || 15 + Math.random() * 10 // weight in averages
+		this.width = .6 // in radians, so that shapes are constant across sizes
 		this.vision = {
 			radius: 100,
 			radians: 3 / 2 * Math.PI // > 0; < 2𝜋
 		}
-		this.speed = Math.random() + 2
-		this.wearsHat = false
-		this.rotation = 0
+		this.linearSpeed = Math.random() + 2
+		this.angularSpeed = 0
 		this.behaviors = {
 			'repulsion from individuals': .1,
 			'imitation of direction': .06,
 			'attraction to group': .03,
 		}
+		this.wearsHat = false // DEBUG: useful to indicate some property
 	}
 
 	set angle(value) {
@@ -109,12 +109,12 @@ export default class Boid {
 		let y = this.y
 
 		adjust: {
-			this.rotation = this.rotation * .9
+			this.angularSpeed = this.angularSpeed * .9
 
 			if(box) {
 				const wall = this.testWallVisibility(box)
 				if(wall) {
-					this.rotation += Math.sign(wall.angle || 1) / wall.distance
+					this.angularSpeed += Math.sign(wall.angle || 1) / wall.distance
 					break adjust
 				}
 			}
@@ -122,30 +122,24 @@ export default class Boid {
 			if(points) {
 				const tooClose = this.findClosest(points)
 				if(tooClose) {
-					// console.log('too close')
-					this.rotation += tooClose * this.behaviors['repulsion from individuals']
-					// break adjust
+					this.angularSpeed += tooClose * this.behaviors['repulsion from individuals']
 				}
 				const result = this.findGroupDirection(points)
 				if(result && result.count > 4) {
-					// console.log('mimic group direction')
-					this.rotation += Math.sign(result.angle) * this.behaviors['imitation of direction']
-					// break adjust
+					this.angularSpeed += Math.sign(result.angle) * this.behaviors['imitation of direction']
 				}
 				const direction = this.findDensityDirection(points)
 				if(direction) {
-					// console.log('get to group')
-					this.rotation += direction * this.behaviors['attraction to group']
-					// break adjust
+					this.angularSpeed += direction * this.behaviors['attraction to group']
 				}
 			}
 		}
 
-		this.rotation = Math.sign(this.rotation) * Math.min(Math.PI / 15, Math.abs(this.rotation))
-		this.angle += this.rotation
+		this.angularSpeed = Math.sign(this.angularSpeed) * Math.min(Math.PI / 15, Math.abs(this.angularSpeed))
+		this.angle += this.angularSpeed
 
-		x -= Math.sin(this.angle) * this.speed
-		y -= Math.cos(this.angle) * this.speed
+		x -= Math.sin(this.angle) * this.linearSpeed
+		y -= Math.cos(this.angle) * this.linearSpeed
 
 		if(box) {
 			if(x < BOUND) x = BOUND
@@ -194,9 +188,6 @@ export default class Boid {
 		// 	return { angle: median, count: inView.length }
 		// }
 
-		// const atan2X = inView.reduce((sum, {angle}) => sum + Math.sin(angle), 0) / inView.length
-		// const atan2Y = inView.reduce((sum, {angle}) => sum + Math.cos(angle), 0) / inView.length
-
 		// weighted by size
 		const atan2X = inView.reduce((sum, {angle, size}) => sum + Math.sin(angle) * size, 0) / inView.reduce((sum, {size}) => sum + size, 0)
 		const atan2Y = inView.reduce((sum, {angle, size}) => sum + Math.cos(angle) * size, 0) / inView.reduce((sum, {size}) => sum + size, 0)
@@ -222,8 +213,6 @@ export default class Boid {
 		
 		if(!leftView.length && !rightView.length)
 			return false
-
-		// return Math.sign(leftView.length - rightView.length)
 
 		// weighted by size
 		const leftWeight = leftView.reduce((sum, {size}) => sum + size, 0)
@@ -267,7 +256,7 @@ export default class Boid {
 		// cheat
 		if(this.x < BOUND * 10 && this.x < BOUND * 10) {
 			return {
-				angle: this.rotation, 
+				angle: this.angularSpeed, 
 				distance: Math.min(Math.abs(this.x - BOUND), Math.abs(this.y - BOUND))
 			}
 		}
@@ -276,7 +265,7 @@ export default class Boid {
 			if (Math.abs(a.distance - b.distance) > BOUND * 2)
 				return a.distance > b.distance
 			else
-				return Math.abs(a.angle - this.rotation) < Math.abs(b.angle - this.rotation)
+				return Math.abs(a.angle - this.angularSpeed) < Math.abs(b.angle - this.angularSpeed)
 			
 		})
 
@@ -307,6 +296,7 @@ export default class Boid {
 	}
 
 	angleFromDeltas({dx, dy}) {
+		// TODO: is this a poor man's atan2?
 		return Math.atan(dx / dy) 
 			+ (dy < 0 ? Math.PI : 0) 
 			+ (dy > 0 && dx < 0 ? Math.PI * 2 : 0)
