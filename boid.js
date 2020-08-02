@@ -75,7 +75,7 @@ export default class Boid {
 			this.drawingAngle -= Math.PI * 2
 
 		const direction = Math.sign(this.angle - this.drawingAngle)
-		const difference = Math[direction ? 'min' : 'max'](Math.abs(this.angle - this.drawingAngle), (Math.PI * 2) / 70)
+		const difference = Math[direction ? 'min' : 'max'](Math.abs(this.angle - this.drawingAngle), (Math.PI * 2) / 55)
 		this.drawingAngle += direction * difference
 		this.drawingAngle = this.drawingAngle % (Math.PI * 2)
 	}
@@ -97,14 +97,17 @@ export default class Boid {
 	drawTriangle(ctx) {
 		ctx.fillStyle = this.color
 		ctx.beginPath()
-		ctx.moveTo(this.x, this.y)
-		ctx.lineTo(
-			this.x + Math.sin(this.drawingAngle + this.width / 2) * this.size,
-			this.y + Math.cos(this.drawingAngle + this.width / 2) * this.size,
+		ctx.moveTo(
+			this.x - Math.sin(this.drawingAngle) * this.size / 2, 
+			this.y - Math.cos(this.drawingAngle) * this.size / 2,
 		)
 		ctx.lineTo(
-			this.x + Math.sin(this.drawingAngle - this.width / 2) * this.size,
-			this.y + Math.cos(this.drawingAngle - this.width / 2) * this.size,
+			this.x + Math.sin(this.drawingAngle + this.width / 2) * this.size / Math.cos(this.width / 2) - Math.sin(this.drawingAngle) * this.size / 2,
+			this.y + Math.cos(this.drawingAngle + this.width / 2) * this.size / Math.cos(this.width / 2) - Math.cos(this.drawingAngle) * this.size / 2,
+		)
+		ctx.lineTo(
+			this.x + Math.sin(this.drawingAngle - this.width / 2) * this.size / Math.cos(this.width / 2) - Math.sin(this.drawingAngle) * this.size / 2,
+			this.y + Math.cos(this.drawingAngle - this.width / 2) * this.size / Math.cos(this.width / 2) - Math.cos(this.drawingAngle) * this.size / 2,
 		)
 		ctx.fill()
 	}
