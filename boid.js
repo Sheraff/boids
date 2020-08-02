@@ -22,6 +22,11 @@ export default class Boid {
 		this.speed = Math.random() + 2
 		this.wearsHat = false
 		this.rotation = 0
+		this.behaviors = {
+			'repulsion from individuals': .1,
+			'imitation of direction': .06,
+			'attraction to group': .03,
+		}
 	}
 
 	set angle(value) {
@@ -117,19 +122,19 @@ export default class Boid {
 				const tooClose = this.findClosest(points)
 				if(tooClose) {
 					// console.log('too close')
-					this.rotation += tooClose / 10
+					this.rotation += tooClose * this.behaviors['repulsion from individuals']
 					// break adjust
 				}
 				const result = this.findGroupDirection(points)
 				if(result && result.count > 4) {
 					// console.log('mimic group direction')
-					this.rotation += Math.sign(result.angle) / 20
+					this.rotation += Math.sign(result.angle) * this.behaviors['imitation of direction']
 					// break adjust
 				}
 				const direction = this.findDensityDirection(points)
 				if(direction) {
 					// console.log('get to group')
-					this.rotation += direction / 30
+					this.rotation += direction * this.behaviors['attraction to group']
 					// break adjust
 				}
 			}
@@ -183,10 +188,10 @@ export default class Boid {
 		if(!inView.length)
 			return false
 
-		const median = circularMedian(inView.map(({angle}) => angle))
-		if(median !== Infinity) {
-			return { angle: median, count: inView.length }
-		}
+		// const median = circularMedian(inView.map(({angle}) => angle))
+		// if(median !== Infinity) {
+		// 	return { angle: median, count: inView.length }
+		// }
 
 		const atan2X = inView.reduce((sum, {angle}) => sum + Math.sin(angle), 0) / inView.length
 		const atan2Y = inView.reduce((sum, {angle}) => sum + Math.cos(angle), 0) / inView.length
