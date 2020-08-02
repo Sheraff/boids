@@ -29,14 +29,14 @@ export default class Boid {
 		this.maxAngularSpeed = (Math.PI * 2) / 45 * (maxAngularSpeedBoost + 1) // lower max angular speed leads to more predictable patterns
 		this.behaviors = {
 			'obstacle avoidance': 2,
-			'repulsion from individuals': .25,
-			'imitation of direction': .075,
-			'attraction to group': .025,
+			'repulsion from individuals': .2,
+			'imitation of direction': .07,
+			'attraction to group': .02,
 		}
 
 		// graphics
 		this.size = 10 + maxLinearSpeedBoost * 15 // longer => higher top speed
-		this.width = 5 + weightBoost * 10 // wider => weighs more in averages
+		this.width = 10 + weightBoost * 5 // wider => weighs more in averages
 		this.width = Math.min(this.size, this.width)
 		this.color = color || `rgb(
 			${maxAngularSpeedBoost * 180},
