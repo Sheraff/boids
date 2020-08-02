@@ -13,17 +13,17 @@ export default class Boid {
 		this.angle = angle // > 0; < 2𝜋
 		this.x = x
 		this.y = y
-		const weightVariability = weight || Math.random()
-		this.weight = 1.5 + weightVariability // weight in averages
+		const weightBoost = weight || Math.random()
+		this.weight = 1.5 + weightBoost // weight in averages
 		this.width = .6 // in radians, so that shapes are constant across sizes
 		this.vision = {
 			radius: 100,
-			radians: 3 / 2 * Math.PI // > 0; < 2𝜋
+			radians: 5 / 4 * Math.PI // > 0; < 2𝜋
 		}
 		this.linearSpeed = 2 + Math.random() * 1
 		this.angularSpeed = 0
-		const maxAngularSpeedVariability = Math.random()
-		this.maxAngularSpeed = (Math.PI * 2) / 45 * (maxAngularSpeedVariability + 1) // lower max angular speed leads to more predictable patterns
+		const maxAngularSpeedBoost = Math.random()
+		this.maxAngularSpeed = (Math.PI * 2) / 45 * (maxAngularSpeedBoost + 1) // lower max angular speed leads to more predictable patterns
 		this.behaviors = {
 			'repulsion from individuals': .15,
 			'imitation of direction': .06,
@@ -31,12 +31,12 @@ export default class Boid {
 		}
 
 		// graphics
-		this.size = weightVariability * 10 + 15
+		this.size = weightBoost * 10 + 15 // bigger => weighs more in averages
 		this.color = color || `rgb(
-			${(1 - maxAngularSpeedVariability) * 180},
-			${maxAngularSpeedVariability * 180},
-			${(1 - maxAngularSpeedVariability) * 180}
-		)`
+			${maxAngularSpeedBoost * 180},
+			${(1 - maxAngularSpeedBoost) * 180},
+			${maxAngularSpeedBoost * 180}
+		)` // greener => turns slower
 		this.wearsHat = false // DEBUG: useful to indicate some property
 		this.drawingAngle = this.angle // smoother draws
 	}
