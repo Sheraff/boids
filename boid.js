@@ -181,14 +181,18 @@ export default class Boid {
 		if(!inView.length)
 			return false
 
-		// biased against extremums (because of circular distribution of radians)
+		const median = circularMedian(inView.map(({angle}) => angle))
+		if(median !== Infinity) {
+			return { angle: median, count: inView.length }
+		}
+
 		const atan2X = inView.reduce((sum, {angle}) => sum + Math.sin(angle), 0) / inView.length
 		const atan2Y = inView.reduce((sum, {angle}) => sum + Math.cos(angle), 0) / inView.length
 		const realAngleMean = Math.atan2(atan2X, atan2Y)
 		const angleMinus = realAngleMean - this.angle
 		const anglePlus = (realAngleMean + Math.PI *2) - this.angle
-		const angle = Math.abs(angleMinus) < Math.abs(anglePlus) ? angleMinus : anglePlus
-		return { angle, count: inView.length }
+		const average = Math.abs(angleMinus) < Math.abs(anglePlus) ? angleMinus : anglePlus
+		return { angle: average, count: inView.length }
 	}
 
 	findDensityDirection(points) {
