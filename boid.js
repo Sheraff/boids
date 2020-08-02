@@ -29,6 +29,7 @@ export default class Boid {
 			'attraction to group': .03,
 		}
 		this.wearsHat = false // DEBUG: useful to indicate some property
+		this.drawingAngle = this.angle // smoother draws
 	}
 
 	set angle(value) {
@@ -44,6 +45,8 @@ export default class Boid {
 	}
 
 	draw(ctx, { withField } = {}) {
+		this.updateDrawingAngle()
+
 		const preserveFill = ctx.fillStyle
 
 		if(withField)
@@ -54,6 +57,18 @@ export default class Boid {
 
 		this.drawTriangle(ctx)
 		ctx.fillStyle = preserveFill
+	}
+
+	updateDrawingAngle() {
+		if(this.angle - this.drawingAngle > Math.PI) 
+			this.drawingAngle += Math.PI * 2
+		else if (this.drawingAngle - this.angle > Math.PI)
+			this.drawingAngle -= Math.PI * 2
+
+		const direction = Math.sign(this.angle - this.drawingAngle)
+		const difference = Math[direction ? 'min' : 'max'](Math.abs(this.angle - this.drawingAngle), (Math.PI * 2) / 70)
+		this.drawingAngle += direction * difference
+		this.drawingAngle = this.drawingAngle % (Math.PI * 2)
 	}
 
 	drawHat(ctx) {
@@ -75,12 +90,12 @@ export default class Boid {
 		ctx.beginPath()
 		ctx.moveTo(this.x, this.y)
 		ctx.lineTo(
-			this.x + Math.sin(this.angle + this.width / 2) * this.size,
-			this.y + Math.cos(this.angle + this.width / 2) * this.size,
+			this.x + Math.sin(this.drawingAngle + this.width / 2) * this.size,
+			this.y + Math.cos(this.drawingAngle + this.width / 2) * this.size,
 		)
 		ctx.lineTo(
-			this.x + Math.sin(this.angle - this.width / 2) * this.size,
-			this.y + Math.cos(this.angle - this.width / 2) * this.size,
+			this.x + Math.sin(this.drawingAngle - this.width / 2) * this.size,
+			this.y + Math.cos(this.drawingAngle - this.width / 2) * this.size,
 		)
 		ctx.fill()
 	}
@@ -95,8 +110,8 @@ export default class Boid {
 			this.x,
 			this.y,
 			this.vision.radius,
-			- this.angle + this.vision.radians / 2 - Math.PI / 2,
-			- this.angle - this.vision.radians / 2 - Math.PI / 2,
+			- this.drawingAngle + this.vision.radians / 2 - Math.PI / 2,
+			- this.drawingAngle - this.vision.radians / 2 - Math.PI / 2,
 			true
 		)
 		ctx.moveTo(this.x, this.y)
