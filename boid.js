@@ -7,14 +7,14 @@ export default class Boid {
 		angle = 0,
 		x = 0,
 		y = 0,
-		color = 'green',
-		size,
+		color,
+		weight,
 	}) {
 		this.angle = angle // > 0; < 2𝜋
 		this.x = x
 		this.y = y
-		this.color = color
-		this.size = size || 15 + Math.random() * 10 // weight in averages
+		const weightVariability = weight || Math.random()
+		this.weight = 1.5 + weightVariability // weight in averages
 		this.width = .6 // in radians, so that shapes are constant across sizes
 		this.vision = {
 			radius: 100,
@@ -22,12 +22,21 @@ export default class Boid {
 		}
 		this.linearSpeed = 2 + Math.random() * 1
 		this.angularSpeed = 0
-		this.maxAngularSpeed = (Math.PI * 2) / 45 * (Math.random() + 1) // lower max angular speed leads to more predictable patterns
+		const maxAngularSpeedVariability = Math.random()
+		this.maxAngularSpeed = (Math.PI * 2) / 45 * (maxAngularSpeedVariability + 1) // lower max angular speed leads to more predictable patterns
 		this.behaviors = {
-			'repulsion from individuals': .1,
+			'repulsion from individuals': .15,
 			'imitation of direction': .06,
 			'attraction to group': .03,
 		}
+
+		// graphics
+		this.size = weightVariability * 10 + 15
+		this.color = color || `rgb(
+			${(1 - maxAngularSpeedVariability) * 180},
+			${maxAngularSpeedVariability * 180},
+			${(1 - maxAngularSpeedVariability) * 180}
+		)`
 		this.wearsHat = false // DEBUG: useful to indicate some property
 		this.drawingAngle = this.angle // smoother draws
 	}
@@ -101,7 +110,7 @@ export default class Boid {
 	}
 
 	drawFieldOfView(ctx) {
-		ctx.globalAlpha = .2
+		ctx.globalAlpha = .07
 		ctx.fillStyle = this.color
 		ctx.beginPath()	
 
@@ -205,8 +214,8 @@ export default class Boid {
 		// }
 
 		// weighted by size
-		const atan2X = inView.reduce((sum, {angle, size}) => sum + Math.sin(angle) * size, 0) / inView.reduce((sum, {size}) => sum + size, 0)
-		const atan2Y = inView.reduce((sum, {angle, size}) => sum + Math.cos(angle) * size, 0) / inView.reduce((sum, {size}) => sum + size, 0)
+		const atan2X = inView.reduce((sum, {angle, weight}) => sum + Math.sin(angle) * weight, 0) / inView.reduce((sum, {weight}) => sum + weight, 0)
+		const atan2Y = inView.reduce((sum, {angle, weight}) => sum + Math.cos(angle) * weight, 0) / inView.reduce((sum, {weight}) => sum + weight, 0)
 
 		const realAngleMean = Math.atan2(atan2X, atan2Y)
 		const angleMinus = realAngleMean - this.angle
@@ -229,8 +238,8 @@ export default class Boid {
 			return false
 
 		// weighted by size
-		const leftWeight = leftView.reduce((sum, {size}) => sum + size, 0)
-		const rightWeight = rightView.reduce((sum, {size}) => sum + size, 0)
+		const leftWeight = leftView.reduce((sum, {weight}) => sum + weight, 0)
+		const rightWeight = rightView.reduce((sum, {weight}) => sum + weight, 0)
 		return Math.sign(leftWeight - rightWeight)
 	}
 

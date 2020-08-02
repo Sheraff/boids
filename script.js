@@ -12,8 +12,8 @@ const cursor = new Boid({
 	x: 450,
 	y: 100,
 	angle: 0,
-	color: 'purple',
-	size: 40,
+	color: 'orange',
+	weight: 3,
 })
 const boids = []
 
@@ -22,7 +22,6 @@ for (let index = 0; index < 200; index++) {
 		x: Math.random() * ctx.canvas.width,
 		y: Math.random() * ctx.canvas.height,
 		angle: Math.random() * Math.PI * 2,
-		color: COLORS[Math.floor(Math.random() * COLORS.length)]
 	})
 	boids.push(boid)
 }
