@@ -2,9 +2,14 @@ import COLORS from './colors.js'
 import Boid from './boid.js'
 
 const canvas = document.createElement('canvas')
-canvas.height = 1000
-canvas.width = 1000
 document.body.appendChild(canvas)
+
+function resize () {
+	canvas.height = innerHeight
+	canvas.width = innerWidth
+}
+resize()
+addEventListener('resize', resize)
 
 const ctx = canvas.getContext('2d')
 
@@ -17,7 +22,7 @@ const cursor = new Boid({
 })
 const boids = []
 
-for (let index = 0; index < 200; index++) {
+for (let index = 0; index < 300; index++) {
 	const boid = new Boid({
 		x: Math.random() * ctx.canvas.width,
 		y: Math.random() * ctx.canvas.height,

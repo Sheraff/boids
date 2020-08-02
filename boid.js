@@ -25,9 +25,9 @@ export default class Boid {
 		const maxAngularSpeedBoost = Math.random()
 		this.maxAngularSpeed = (Math.PI * 2) / 45 * (maxAngularSpeedBoost + 1) // lower max angular speed leads to more predictable patterns
 		this.behaviors = {
-			'repulsion from individuals': .15,
-			'imitation of direction': .06,
-			'attraction to group': .03,
+			'repulsion from individuals': .2,
+			'imitation of direction': .075,
+			'attraction to group': .025,
 		}
 
 		// graphics
@@ -213,10 +213,13 @@ export default class Boid {
 
 		// const median = circularMedian(inView.map(({angle}) => angle))
 		// if(median !== Infinity) {
-		// 	return { angle: median, count: inView.length }
+		// 	const angleMinus = median - this.angle
+		// 	const anglePlus = (median + Math.PI *2) - this.angle
+		// 	const average = Math.abs(angleMinus) < Math.abs(anglePlus) ? angleMinus : anglePlus
+		// 	return { angle: average, count: inView.length }
 		// }
 
-		// weighted by size
+		// average, weighted by size
 		const atan2X = inView.reduce((sum, {angle, weight}) => sum + Math.sin(angle) * weight, 0) / inView.reduce((sum, {weight}) => sum + weight, 0)
 		const atan2Y = inView.reduce((sum, {angle, weight}) => sum + Math.cos(angle) * weight, 0) / inView.reduce((sum, {weight}) => sum + weight, 0)
 
@@ -279,6 +282,9 @@ export default class Boid {
 		if(returns.length === 0)
 			return false
 
+		if(returns.length === 1)
+			return returns[0]
+
 		// cheat
 		if(this.x < BOUND * 10 && this.x < BOUND * 10) {
 			return {
@@ -291,7 +297,7 @@ export default class Boid {
 			if (Math.abs(a.distance - b.distance) > BOUND * 2)
 				return a.distance > b.distance
 			else
-				return Math.abs(a.angle - this.angularSpeed) < Math.abs(b.angle - this.angularSpeed)
+				return this.absoluteAngleDifference(a.angle, this.angle) < this.absoluteAngleDifference(b.angle, this.angle)
 			
 		})
 
@@ -326,5 +332,13 @@ export default class Boid {
 		return Math.atan(dx / dy) 
 			+ (dy < 0 ? Math.PI : 0) 
 			+ (dy > 0 && dx < 0 ? Math.PI * 2 : 0)
+	}
+
+	absoluteAngleDifference(alpha, beta) {
+		const phi = Math.abs(beta - alpha) % (Math.PI * 2)
+		const distance = phi > Math.PI 
+			? Math.PI * 2 - phi 
+			: phi
+		return distance
 	}
 }
