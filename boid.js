@@ -20,7 +20,7 @@ export default class Boid {
 			radius: 100,
 			radians: 3 / 2 * Math.PI // > 0; < 2𝜋
 		}
-		this.linearSpeed = 2.5 + Math.random() * 0
+		this.linearSpeed = 2 + Math.random() * 1
 		this.angularSpeed = 0
 		this.maxAngularSpeed = (Math.PI * 2) / 45 * (Math.random() + 1) // lower max angular speed leads to more predictable patterns
 		this.behaviors = {
