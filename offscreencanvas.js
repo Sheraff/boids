@@ -3,6 +3,7 @@ self.importScripts('boid.js')
 let canvas
 let isInit = false // init canvas only once
 let cursor, lastX, lastY, hover // mouse controls
+let boids = [] // entities
 
 onmessage = function(event) {
 	if(!isInit && 'canvas' in event.data) {
@@ -10,9 +11,10 @@ onmessage = function(event) {
 		canvas = event.data.canvas
 		const ctx = canvas.getContext('2d')
 		init(ctx)
+		postMessage({count: boids.length})
 	}
 
-	if('x' in event.data || 'y' in event.data) {
+	if(event.data.mouse && ('x' in event.data || 'y' in event.data)) {
 		lastX = event.data.x
 		lastY = event.data.y
 	}
@@ -25,6 +27,27 @@ onmessage = function(event) {
 		canvas.height = event.data.height
 		canvas.width = event.data.width
 	}
+
+	if(event.data.new && 'x' in event.data && 'y' in event.data) {
+		boids.push(new Boid({
+			x: event.data.x,
+			y: event.data.y,
+			angle: cursor.angle || Math.random() * Math.PI * 2,
+		}))
+		postMessage({count: boids.length})
+	}
+
+	if('direction' in event.data) {
+		boids.forEach(boid => boid.behaviors['imitation of direction'] = event.data.direction)
+	}
+
+	if('avoidance' in event.data) {
+		boids.forEach(boid => boid.behaviors['repulsion from individuals'] = event.data.avoidance)
+	}
+
+	if('flocking' in event.data) {
+		boids.forEach(boid => boid.behaviors['attraction to group'] = event.data.flocking)
+	}
 }
 
 function init(ctx) {	
@@ -36,9 +59,8 @@ function init(ctx) {
 		weight: 4,
 		speed: 1
 	})
-	const boids = []
 
-	for (let index = 0; index < 300; index++) {
+	for (let index = 0; index < 200; index++) {
 		const boid = new Boid({
 			x: Math.random() * ctx.canvas.width,
 			y: Math.random() * ctx.canvas.height,
@@ -89,10 +111,11 @@ function loopUpdate(ctx, boids, lastTime = performance.now()) {
 }
 
 function loopDraw(ctx, boids) {
-	requestAnimationFrame(() => {
+	requestAnimationFrame((time) => {
 		newFrame = true
 		draw(ctx, boids)
 		loopDraw(ctx, boids)
+		postMessage({frame: time})
 	})
 }
 
