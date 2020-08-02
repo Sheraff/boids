@@ -33,6 +33,7 @@ onmessage = function(event) {
 			x: event.data.x,
 			y: event.data.y,
 			angle: cursor.angle || Math.random() * Math.PI * 2,
+			color: 'red'
 		}))
 		postMessage({count: boids.length})
 	}
