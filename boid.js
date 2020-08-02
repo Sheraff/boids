@@ -152,6 +152,7 @@ class Boid {
 		adjust: {
 			this.angularSpeed = this.angularSpeed * .9 * timeMultiplier
 			this.linearSpeed = Math.min(this.maxLinearSpeed, this.linearSpeed + .03 * timeMultiplier)
+			const visiblePoints = points.filter(point => point !== this && this.testPointVisibility(point))
 
 			const wall = this.testWallVisibility(box)
 			if(wall) {
@@ -159,18 +160,18 @@ class Boid {
 				this.linearSpeed -= .03 * wall.distance / this.vision.radius * timeMultiplier
 			}
 
-			const tooClose = this.findClosest(points)
+			const tooClose = this.findClosest(visiblePoints)
 			if(tooClose) {
 				this.angularSpeed += tooClose * this.behaviors['repulsion from individuals'] * timeMultiplier
 				this.linearSpeed -= .03 * timeMultiplier
 			}
 
-			const result = this.findGroupDirection(points)
+			const result = this.findGroupDirection(visiblePoints)
 			if(result && result.count > 4) {
 				this.angularSpeed += Math.sign(result.angle) * this.behaviors['imitation of direction'] * timeMultiplier
 			}
 
-			const direction = this.findDensityDirection(points)
+			const direction = this.findDensityDirection(visiblePoints)
 			if(direction) {
 				this.angularSpeed += direction * this.behaviors['attraction to group'] * timeMultiplier
 			}
@@ -194,15 +195,15 @@ class Boid {
 		this.y = y
 	}
 
-	findClosest(points) {
-		const closestLeft = points.filter(point => {
+	findClosest(visiblePoints) {
+		const closestLeft = visiblePoints.filter(point => {
 			if(point === this)
 				return false
 			const distance = Math.sqrt((point.x - this.x)**2 + (point.y - this.y)**2)
 			return distance < this.size + point.size
 				&& this.testPointVisibility({x: point.x, y: point.y, side: 'left'})
 		})
-		const closestRight = points.filter(point => {
+		const closestRight = visiblePoints.filter(point => {
 			if(point === this)
 				return false
 			const distance = Math.sqrt((point.x - this.x)**2 + (point.y - this.y)**2)
@@ -219,43 +220,32 @@ class Boid {
 		return Math.sign(rightWeight - leftWeight)
 	}
 
-	findGroupDirection(points) {
-		const inView = points.filter(point => 
-			point !== this 
-			&& this.testPointVisibility(point)
-		)
-
-		if(!inView.length)
+	findGroupDirection(visiblePoints) {
+		if(!visiblePoints.length)
 			return false
 
-		// const median = circularMedian(inView.map(({angle}) => angle))
+		// const median = circularMedian(visiblePoints.map(({angle}) => angle))
 		// if(median !== Infinity) {
 		// 	const angleMinus = median - this.angle
 		// 	const anglePlus = (median + Math.PI *2) - this.angle
 		// 	const average = Math.abs(angleMinus) < Math.abs(anglePlus) ? angleMinus : anglePlus
-		// 	return { angle: average, count: inView.length }
+		// 	return { angle: average, count: visiblePoints.length }
 		// }
 
 		// average, weighted by size
-		const atan2X = inView.reduce((sum, {angle, weight}) => sum + Math.sin(angle) * weight, 0) / inView.reduce((sum, {weight}) => sum + weight, 0)
-		const atan2Y = inView.reduce((sum, {angle, weight}) => sum + Math.cos(angle) * weight, 0) / inView.reduce((sum, {weight}) => sum + weight, 0)
+		const atan2X = visiblePoints.reduce((sum, {angle, weight}) => sum + Math.sin(angle) * weight, 0) / visiblePoints.reduce((sum, {weight}) => sum + weight, 0)
+		const atan2Y = visiblePoints.reduce((sum, {angle, weight}) => sum + Math.cos(angle) * weight, 0) / visiblePoints.reduce((sum, {weight}) => sum + weight, 0)
 
 		const realAngleMean = Math.atan2(atan2X, atan2Y)
 		const angleMinus = realAngleMean - this.angle
 		const anglePlus = (realAngleMean + Math.PI *2) - this.angle
 		const average = Math.abs(angleMinus) < Math.abs(anglePlus) ? angleMinus : anglePlus
-		return { angle: average, count: inView.length }
+		return { angle: average, count: visiblePoints.length }
 	}
 
-	findDensityDirection(points) {
-		const leftView = points.filter(point => 
-			point !== this 
-			&& this.testPointVisibility({x: point.x, y: point.y, side: 'left'})
-		)
-		const rightView = points.filter(point => 
-			point !== this 
-			&& this.testPointVisibility({x: point.x, y: point.y, side: 'right'})
-		)
+	findDensityDirection(visiblePoints) {
+		const leftView = visiblePoints.filter(point => this.testPointVisibility({x: point.x, y: point.y, side: 'left'}))
+		const rightView = visiblePoints.filter(point => this.testPointVisibility({x: point.x, y: point.y, side: 'right'}))
 		
 		if(!leftView.length && !rightView.length)
 			return false
