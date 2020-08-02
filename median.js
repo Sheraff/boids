@@ -7,7 +7,7 @@
  * 
  */
 
-export default function cmed(x) {
+function circularMedian(x) {
 	const sx = [...x].sort()
 	const difsin = []
 	const numties = []

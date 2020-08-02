@@ -1,8 +1,8 @@
-import circularMedian from './median.js'
+self.importScripts('median.js')
 
-const BOUND = 10
+const BOUND = 12.5
 
-export default class Boid {
+class Boid {
 	constructor({
 		angle = 0,
 		x = 0,
@@ -142,35 +142,37 @@ export default class Boid {
 		ctx.globalAlpha = 1
 	}
 
-	update({points, box}) {
+	update({points, box, deltaTime}) {
+
+		const timeMultiplier = deltaTime / 15
 
 		let x = this.x
 		let y = this.y
 
 		adjust: {
-			this.angularSpeed = this.angularSpeed * .9
-			this.linearSpeed = Math.min(this.maxLinearSpeed, this.linearSpeed + .03)
+			this.angularSpeed = this.angularSpeed * .9 * timeMultiplier
+			this.linearSpeed = Math.min(this.maxLinearSpeed, this.linearSpeed + .03 * timeMultiplier)
 
 			const wall = this.testWallVisibility(box)
 			if(wall) {
-				this.angularSpeed += Math.sign(wall.angle || 1) / wall.distance * this.behaviors['obstacle avoidance']
-				this.linearSpeed -= .03 * wall.distance / this.vision.radius
+				this.angularSpeed += Math.sign(wall.angle || 1) / wall.distance * this.behaviors['obstacle avoidance'] * timeMultiplier
+				this.linearSpeed -= .03 * wall.distance / this.vision.radius * timeMultiplier
 			}
 
 			const tooClose = this.findClosest(points)
 			if(tooClose) {
-				this.angularSpeed += tooClose * this.behaviors['repulsion from individuals']
-				this.linearSpeed -= .03
+				this.angularSpeed += tooClose * this.behaviors['repulsion from individuals'] * timeMultiplier
+				this.linearSpeed -= .03 * timeMultiplier
 			}
 
 			const result = this.findGroupDirection(points)
 			if(result && result.count > 4) {
-				this.angularSpeed += Math.sign(result.angle) * this.behaviors['imitation of direction']
+				this.angularSpeed += Math.sign(result.angle) * this.behaviors['imitation of direction'] * timeMultiplier
 			}
 
 			const direction = this.findDensityDirection(points)
 			if(direction) {
-				this.angularSpeed += direction * this.behaviors['attraction to group']
+				this.angularSpeed += direction * this.behaviors['attraction to group'] * timeMultiplier
 			}
 		}
 
