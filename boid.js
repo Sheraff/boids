@@ -9,29 +9,35 @@ export default class Boid {
 		y = 0,
 		color,
 		weight,
+		speed,
 	}) {
 		this.angle = angle // > 0; < 2𝜋
 		this.x = x
 		this.y = y
 		const weightBoost = weight || Math.random()
 		this.weight = 1.5 + weightBoost // weight in averages
-		this.width = .6 // in radians, so that shapes are constant across sizes
 		this.vision = {
 			radius: 100,
 			radians: 5 / 4 * Math.PI // > 0; < 2𝜋
 		}
-		this.linearSpeed = 2 + Math.random() * 1
+		this.linearSpeed = .1
+		this.minLinearSpeed = .1
+		const maxLinearSpeedBoost = speed || Math.random()
+		this.maxLinearSpeed = 2 + maxLinearSpeedBoost * 1
 		this.angularSpeed = 0
 		const maxAngularSpeedBoost = Math.random()
 		this.maxAngularSpeed = (Math.PI * 2) / 45 * (maxAngularSpeedBoost + 1) // lower max angular speed leads to more predictable patterns
 		this.behaviors = {
+			'obstacle avoidance': 2,
 			'repulsion from individuals': .2,
 			'imitation of direction': .075,
 			'attraction to group': .025,
 		}
 
 		// graphics
-		this.size = weightBoost * 10 + 15 // bigger => weighs more in averages
+		this.size = 10 + maxLinearSpeedBoost * 15 // longer => higher top speed
+		this.width = 5 + weightBoost * 10 // wider => weighs more in averages
+		this.width = Math.min(this.size, this.width)
 		this.color = color || `rgb(
 			${maxAngularSpeedBoost * 180},
 			${(1 - maxAngularSpeedBoost) * 180},
@@ -75,7 +81,7 @@ export default class Boid {
 			this.drawingAngle -= Math.PI * 2
 
 		const direction = Math.sign(this.angle - this.drawingAngle)
-		const difference = Math[direction ? 'min' : 'max'](Math.abs(this.angle - this.drawingAngle), (Math.PI * 2) / 55)
+		const difference = Math[direction ? 'min' : 'max'](Math.abs(this.angle - this.drawingAngle), (Math.PI * 2) / 50)
 		this.drawingAngle += direction * difference
 		this.drawingAngle = this.drawingAngle % (Math.PI * 2)
 	}
@@ -97,17 +103,21 @@ export default class Boid {
 	drawTriangle(ctx) {
 		ctx.fillStyle = this.color
 		ctx.beginPath()
+		const centerX = Math.sin(this.drawingAngle) * this.size / 2
+		const centerY = Math.cos(this.drawingAngle) * this.size / 2
+		const hypotenuse = Math.sqrt(this.size**2 + (this.width/2)**2)
+		const halfAngle = Math.asin(this.width / this.size / 2)
 		ctx.moveTo(
-			this.x - Math.sin(this.drawingAngle) * this.size / 2, 
-			this.y - Math.cos(this.drawingAngle) * this.size / 2,
+			this.x - centerX, 
+			this.y - centerY,
 		)
 		ctx.lineTo(
-			this.x + Math.sin(this.drawingAngle + this.width / 2) * this.size / Math.cos(this.width / 2) - Math.sin(this.drawingAngle) * this.size / 2,
-			this.y + Math.cos(this.drawingAngle + this.width / 2) * this.size / Math.cos(this.width / 2) - Math.cos(this.drawingAngle) * this.size / 2,
+			this.x + Math.cos(Math.PI / 2 - this.drawingAngle - halfAngle) * hypotenuse - centerX,
+			this.y + Math.sin(Math.PI / 2 - this.drawingAngle - halfAngle) * hypotenuse - centerY,
 		)
 		ctx.lineTo(
-			this.x + Math.sin(this.drawingAngle - this.width / 2) * this.size / Math.cos(this.width / 2) - Math.sin(this.drawingAngle) * this.size / 2,
-			this.y + Math.cos(this.drawingAngle - this.width / 2) * this.size / Math.cos(this.width / 2) - Math.cos(this.drawingAngle) * this.size / 2,
+			this.x + Math.sin(this.drawingAngle - halfAngle) * hypotenuse - centerX,
+			this.y + Math.cos(this.drawingAngle - halfAngle) * hypotenuse - centerY,
 		)
 		ctx.fill()
 	}
@@ -138,31 +148,32 @@ export default class Boid {
 
 		adjust: {
 			this.angularSpeed = this.angularSpeed * .9
+			this.linearSpeed = Math.min(this.maxLinearSpeed, this.linearSpeed + .03)
 
-			if(box) {
-				const wall = this.testWallVisibility(box)
-				if(wall) {
-					this.angularSpeed += Math.sign(wall.angle || 1) / wall.distance
-					break adjust
-				}
+			const wall = this.testWallVisibility(box)
+			if(wall) {
+				this.angularSpeed += Math.sign(wall.angle || 1) / wall.distance * this.behaviors['obstacle avoidance']
+				this.linearSpeed -= .03 * wall.distance / this.vision.radius
 			}
 
-			if(points) {
-				const tooClose = this.findClosest(points)
-				if(tooClose) {
-					this.angularSpeed += tooClose * this.behaviors['repulsion from individuals']
-				}
-				const result = this.findGroupDirection(points)
-				if(result && result.count > 4) {
-					this.angularSpeed += Math.sign(result.angle) * this.behaviors['imitation of direction']
-				}
-				const direction = this.findDensityDirection(points)
-				if(direction) {
-					this.angularSpeed += direction * this.behaviors['attraction to group']
-				}
+			const tooClose = this.findClosest(points)
+			if(tooClose) {
+				this.angularSpeed += tooClose * this.behaviors['repulsion from individuals']
+				this.linearSpeed -= .035
+			}
+
+			const result = this.findGroupDirection(points)
+			if(result && result.count > 4) {
+				this.angularSpeed += Math.sign(result.angle) * this.behaviors['imitation of direction']
+			}
+
+			const direction = this.findDensityDirection(points)
+			if(direction) {
+				this.angularSpeed += direction * this.behaviors['attraction to group']
 			}
 		}
 
+		this.linearSpeed = Math.max(this.minLinearSpeed, Math.min(this.linearSpeed, this.maxLinearSpeed))
 		this.angularSpeed = Math.sign(this.angularSpeed) * Math.min(this.maxAngularSpeed, Math.abs(this.angularSpeed))
 		this.angle += this.angularSpeed
 
@@ -199,7 +210,10 @@ export default class Boid {
 		if(!closestLeft.length && !closestRight.length)
 			return false
 
-		return Math.sign(closestRight.length - closestLeft.length)
+		const leftWeight = closestLeft.reduce((sum, {weight}) => sum + weight, 0)
+		const rightWeight = closestRight.reduce((sum, {weight}) => sum + weight, 0)
+
+		return Math.sign(rightWeight - leftWeight)
 	}
 
 	findGroupDirection(points) {

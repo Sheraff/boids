@@ -18,7 +18,8 @@ const cursor = new Boid({
 	y: 100,
 	angle: 0,
 	color: 'orange',
-	weight: 3,
+	weight: 4,
+	speed: 1
 })
 const boids = []
 
