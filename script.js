@@ -12,21 +12,18 @@ canvas.addEventListener('mouseenter', () => worker.postMessage({hover: true}))
 canvas.addEventListener('mouseleave', () => worker.postMessage({hover: false}))
 canvas.addEventListener('click', ({x, y}) => worker.postMessage({new: true, x, y}))
 
-document.getElementById('direction').addEventListener('input', ({target}) => {
-	const value = target.value / 100
-	worker.postMessage({direction: value})
-	target.nextElementSibling.innerText = 'Direction: ' + value
+void [
+	'direction',
+	'avoidance',
+	'flocking',
+].forEach(key => {
+	document.getElementById(key).addEventListener('input', ({target}) => {
+		const value = target.value / 100
+		worker.postMessage({[key]: value})
+		target.nextElementSibling.innerText = value
+	})
 })
-document.getElementById('avoidance').addEventListener('input', ({target}) => {
-	const value = target.value / 100
-	worker.postMessage({avoidance: value})
-	target.nextElementSibling.innerText = 'Avoidance: ' + value
-})
-document.getElementById('flocking').addEventListener('input', ({target}) => {
-	const value = target.value / 100
-	worker.postMessage({flocking: value})
-	target.nextElementSibling.innerText = 'Flocking: ' + value
-})
+
 
 let frames = []
 worker.addEventListener('message', ({data}) => {
