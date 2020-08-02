@@ -1,3 +1,5 @@
+import circularMedian from './median.js'
+
 const BOUND = 10
 
 export default class Boid {
