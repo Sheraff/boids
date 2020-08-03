@@ -58,7 +58,7 @@ function init(ctx) {
 		angle: 0,
 		color: 'orange',
 		weight: 4,
-		speed: 1
+		speed: 0,
 	})
 
 	for (let index = 0; index < 200; index++) {

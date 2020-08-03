@@ -14,15 +14,15 @@ class Boid {
 		this.angle = angle // > 0; < 2𝜋
 		this.x = x
 		this.y = y
-		const weightBoost = weight || (Math.random() + Math.random() + Math.random() + Math.random() + Math.random() + Math.random()) / 3
-		this.weight = .1 + weightBoost // weight in averages
+		const weightBoost = weight ?? (Math.random() + Math.random() + Math.random() + Math.random() + Math.random() + Math.random()) / 6
+		this.weight = 1 + weightBoost // weight in averages
 		this.vision = {
 			radius: 100,
 			radians: 5 / 4 * Math.PI // > 0; < 2𝜋
 		}
 		this.minLinearSpeed = .2
 		this.linearSpeed = this.minLinearSpeed
-		const maxLinearSpeedBoost = speed || Math.random()
+		const maxLinearSpeedBoost = speed ?? Math.random()
 		this.maxLinearSpeed = 2 + maxLinearSpeedBoost * 1
 		this.angularSpeed = 0
 		const maxAngularSpeedBoost = Math.random()
@@ -35,10 +35,10 @@ class Boid {
 		}
 
 		// graphics
-		this.size = 10 + maxLinearSpeedBoost * 15 // longer => higher top speed
-		this.width = 5 + weightBoost * 10 // wider => weighs more in averages
-		this.width = Math.min(this.size, this.width)
-		this.color = color || `rgb(
+		this.size = 10 + Math.min(2, weightBoost) * 15 // longer => weighs more in averages
+		this.width = 5 + Math.max(0, 1 - maxLinearSpeedBoost) * 10 // narrower => higher top speed
+		// this.width = Math.min(this.size, this.width)
+		this.color = color ?? `rgb(
 			${maxAngularSpeedBoost * 180},
 			${(1 - maxAngularSpeedBoost) * 180},
 			${maxAngularSpeedBoost * 180}
