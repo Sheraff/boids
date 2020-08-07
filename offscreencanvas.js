@@ -103,8 +103,8 @@ function init(ctx) {
  */
 function gridSplit({width, height}, boids) {
 	const maxVisionRange = Math.max(...boids.map(({vision}) => vision.radius))
-	const nbColumns = Math.ceil(width / maxVisionRange)
-	const nbRows = Math.ceil(height / maxVisionRange)
+	const nbColumns = Math.ceil(width / maxVisionRange) + 1
+	const nbRows = Math.ceil(height / maxVisionRange) + 1
 	/** @type {Boid[][][]} */
 	const cells = new Array(nbColumns)
 		.fill(null)
