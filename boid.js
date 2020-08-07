@@ -38,10 +38,10 @@ class Boid {
 		this.weight = 1 + weightBoost
 
 		/**
-		 * @typedef {object} vision
+		 * @typedef {object} Vision
 		 * @property {number} radius
 		 * @property {number} radians - angle in radians (0 < angle < 2𝜋)
-		 * @type {vision}
+		 * @type {Vision}
 		 */
 		this.vision = {
 			radius: 100,
@@ -65,7 +65,14 @@ class Boid {
 		/** @type {number} - lower max angular speed leads to more predictable patterns */
 		this.maxAngularSpeed = (Math.PI * 2) / 45 * (maxAngularSpeedBoost + 1)
 
-		/** @type {Object.<string, number>} */
+		/**
+		 * @typedef {object} BehaviorWeights
+		 * @property {number} 'obstacle avoidance'
+		 * @property {number} 'repulsion from individuals'
+		 * @property {number} 'imitation of direction'
+		 * @property {number} 'attraction to group'
+		 * @type {BehaviorWeights}
+		 */
 		this.behaviors = {
 			'obstacle avoidance': 2,
 			'repulsion from individuals': .2,
