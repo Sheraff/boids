@@ -165,10 +165,11 @@ class Boid {
 		ctx.fillStyle = this.color
 		ctx.beginPath()
 		const drawSize = this.size * .9
+		const drawWidth = this.width
 		const centerX = Math.sin(this.drawingAngle) * drawSize / 2
 		const centerY = Math.cos(this.drawingAngle) * drawSize / 2
-		const hypotenuse = Math.sqrt(drawSize**2 + (this.width/2)**2)
-		const halfAngle = Math.asin(this.width / drawSize / 2)
+		const hypotenuse = Math.sqrt(drawSize**2 + (drawWidth/2)**2)
+		const halfAngle = Math.asin(drawWidth / drawSize / 2)
 		ctx.moveTo(
 			this.x - centerX, 
 			this.y - centerY,
