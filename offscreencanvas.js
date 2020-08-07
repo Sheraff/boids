@@ -145,7 +145,8 @@ function gridSplit({width, height}, boids) {
  * @param {DOMHighResTimeStamp} deltaTime 
  */
 function update(box, boids, deltaTime) {
-	const map = gridSplit(box, [...boids, cursor])
+	const allEntities = [...boids, cursor]
+	const map = gridSplit(box, allEntities)
 
 	boids.forEach(boid => {
 		boid.update({points: map.get(boid), box, deltaTime})
