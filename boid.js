@@ -406,7 +406,7 @@ class Boid {
 	 * @param {Object} options
 	 * @param {'left' | 'right'} options.side - side to include in the cone of vision, defaults to 'both'
 	 */
-	testPointVisibility(point, {side}) {
+	testPointVisibility(point, {side} = {}) {
 		const dx = this.x - point.x
 		const dy = this.y - point.y
 
