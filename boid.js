@@ -2,7 +2,20 @@ self.importScripts('median.js')
 
 const BOUND = 12.5
 
+/**
+ * @typedef {string | CanvasGradient | CanvasPattern} CanvasColor
+ */
+
 class Boid {
+	/**
+	 * @param {Object} options
+	 * @param {number?} options.angle
+	 * @param {number?} options.x
+	 * @param {number?} options.y
+	 * @param {CanvasColor?} options.color
+	 * @param {number?} options.weight
+	 * @param {number?} options.speed
+	 */
 	constructor({
 		angle = 0,
 		x = 0,
@@ -11,22 +24,48 @@ class Boid {
 		weight,
 		speed,
 	}) {
-		this.angle = angle // > 0; < 2𝜋
+		/** @type {number} - angle in radians (0 < angle < 2𝜋) */
+		this.angle = angle
+
+		/** @type {number} */
 		this.x = x
+
+		/** @type {number} */
 		this.y = y
+
 		const weightBoost = weight ?? (Math.random() + Math.random() + Math.random() + Math.random() + Math.random() + Math.random()) / 6
-		this.weight = 1 + weightBoost // weight in averages
+		/** @type {number} - weight in averages */
+		this.weight = 1 + weightBoost
+
+		/**
+		 * @typedef {object} vision
+		 * @property {number} radius
+		 * @property {number} radians - angle in radians (0 < angle < 2𝜋)
+		 * @type {vision}
+		 */
 		this.vision = {
 			radius: 100,
-			radians: 5 / 4 * Math.PI // > 0; < 2𝜋
+			radians: 5 / 4 * Math.PI
 		}
+
+		/** @type {number} */
 		this.minLinearSpeed = .2
+
+		/** @type {number} */
 		this.linearSpeed = this.minLinearSpeed
+
 		const maxLinearSpeedBoost = speed ?? Math.random()
+		/** @type {number} */
 		this.maxLinearSpeed = 2 + maxLinearSpeedBoost * 1
+
+		/** @type {number} */
 		this.angularSpeed = 0
+
 		const maxAngularSpeedBoost = Math.random()
-		this.maxAngularSpeed = (Math.PI * 2) / 45 * (maxAngularSpeedBoost + 1) // lower max angular speed leads to more predictable patterns
+		/** @type {number} - lower max angular speed leads to more predictable patterns */
+		this.maxAngularSpeed = (Math.PI * 2) / 45 * (maxAngularSpeedBoost + 1)
+
+		/** @type {Object.<string, number>} */
 		this.behaviors = {
 			'obstacle avoidance': 2,
 			'repulsion from individuals': .2,
@@ -35,18 +74,30 @@ class Boid {
 		}
 
 		// graphics
-		this.size = 10 + Math.min(2, weightBoost) * 15 // longer => weighs more in averages
-		this.width = 5 + Math.max(0, 1 - maxLinearSpeedBoost) * 10 // narrower => higher top speed
+		/** @type {number} - longer => weighs more in averages */
+		this.size = 10 + Math.min(2, weightBoost) * 15
+
+		/** @type {number} - narrower => higher top speed */
+		this.width = 5 + Math.max(0, 1 - maxLinearSpeedBoost) * 10
 		// this.width = Math.min(this.size, this.width)
+		
+		/** @type {string | CanvasGradient | CanvasPattern} - greener => turns slower */
 		this.color = color ?? `rgb(
 			${maxAngularSpeedBoost * 180},
 			${(1 - maxAngularSpeedBoost) * 180},
 			${maxAngularSpeedBoost * 180}
-		)` // greener => turns slower
-		this.wearsHat = false // DEBUG: useful to indicate some property
-		this.drawingAngle = this.angle // smoother draws
+		)`
+
+		/** @type {boolean} - DEBUG: useful to indicate some property*/
+		this.wearsHat = false
+
+		/** @type {number} - targets this.angle w/ smoothed out variations */
+		this.drawingAngle = this.angle
 	}
 
+	/**
+	 * @param {number} value
+	 */
 	set angle(value) {
 		if(value < 0)
 			this._angle = value % (Math.PI * 2) + Math.PI * 2
@@ -59,6 +110,10 @@ class Boid {
 		return this._angle
 	}
 
+	/**
+	 * @param {CanvasRenderingContext2D} ctx 
+	 * @param {{ withField?: boolean }} options 
+	 */
 	draw(ctx, { withField } = {}) {
 		this.updateDrawingAngle()
 
@@ -86,6 +141,9 @@ class Boid {
 		this.drawingAngle = this.drawingAngle % (Math.PI * 2)
 	}
 
+	/**
+	 * @param {CanvasRenderingContext2D} ctx 
+	 */
 	drawHat(ctx) {
 		ctx.fillStyle = this.color
 		ctx.beginPath()
@@ -100,6 +158,9 @@ class Boid {
 		ctx.fill()
 	}
 
+	/**
+	 * @param {CanvasRenderingContext2D} ctx 
+	 */
 	drawTriangle(ctx) {
 		ctx.fillStyle = this.color
 		ctx.beginPath()
@@ -123,6 +184,9 @@ class Boid {
 		ctx.fill()
 	}
 
+	/**
+	 * @param {CanvasRenderingContext2D} ctx 
+	 */
 	drawFieldOfView(ctx) {
 		ctx.globalAlpha = .07
 		ctx.fillStyle = this.color
@@ -142,8 +206,13 @@ class Boid {
 		ctx.globalAlpha = 1
 	}
 
+	/**
+	 * @param {Object} options
+	 * @param {Array<Boid>} options.points
+	 * @param {HTMLCanvasElement} options.box
+	 * @param {DOMHighResTimeStamp} options.deltaTime
+	 */
 	update({points, box, deltaTime}) {
-
 		const timeMultiplier = deltaTime / 15
 
 		let x = this.x
@@ -195,20 +264,24 @@ class Boid {
 		this.y = y
 	}
 
+	/**
+	 * @param {Array<Boid>} visiblePoints
+	 * @returns {-1 | 1}
+	 */
 	findClosest(visiblePoints) {
 		const closestLeft = visiblePoints.filter(point => {
 			if(point === this)
 				return false
 			const distance = Math.sqrt((point.x - this.x)**2 + (point.y - this.y)**2)
 			return distance < this.size + point.size
-				&& this.testPointVisibility({x: point.x, y: point.y, side: 'left'})
+				&& this.testPointVisibility(point, {side: 'left'})
 		})
 		const closestRight = visiblePoints.filter(point => {
 			if(point === this)
 				return false
 			const distance = Math.sqrt((point.x - this.x)**2 + (point.y - this.y)**2)
 			return distance < this.size + point.size
-				&& this.testPointVisibility({x: point.x, y: point.y, side: 'right'})
+				&& this.testPointVisibility(point, {side: 'right'})
 		})
 
 		if(!closestLeft.length && !closestRight.length)
@@ -220,6 +293,9 @@ class Boid {
 		return Math.sign(rightWeight - leftWeight)
 	}
 
+	/**
+	 * @param {Array<Boid>} visiblePoints
+	 */
 	findGroupDirection(visiblePoints) {
 		if(!visiblePoints.length)
 			return false
@@ -243,9 +319,13 @@ class Boid {
 		return { angle: average, count: visiblePoints.length }
 	}
 
+	/**
+	 * @param {Array<Boid>} visiblePoints
+	 * @returns {-1 | 1}
+	 */
 	findDensityDirection(visiblePoints) {
-		const leftView = visiblePoints.filter(point => this.testPointVisibility({x: point.x, y: point.y, side: 'left'}))
-		const rightView = visiblePoints.filter(point => this.testPointVisibility({x: point.x, y: point.y, side: 'right'}))
+		const leftView = visiblePoints.filter(point => this.testPointVisibility(point, {side: 'left'}))
+		const rightView = visiblePoints.filter(point => this.testPointVisibility(point, {side: 'right'}))
 		
 		if(!leftView.length && !rightView.length)
 			return false
@@ -256,10 +336,19 @@ class Boid {
 		return Math.sign(leftWeight - rightWeight)
 	}
 
+	/**
+	 * @typedef {Object} WallInView
+	 * @property {number} angle
+	 * @property {number} distance
+	 * 
+	 * @param {HTMLCanvasElement}
+	 * @returns {false | WallInView}
+	 */
 	testWallVisibility({height, width}) {
 		const futureX = this.x - Math.sin(this.angle) * this.vision.radius
 		const futureY = this.y - Math.cos(this.angle) * this.vision.radius
 
+		/** @type Array<WallInView> */
 		const returns = []
 		if(futureX < BOUND) { // left
 			returns.push({
@@ -311,10 +400,15 @@ class Boid {
 		return returns[0]
 	}
 
-	testPointVisibility({x, y, side}) {
-		// is point (x,y) in cone of vision (radius,radians) of boid (this)
-		const dx = this.x - x
-		const dy = this.y - y
+	/**
+	 * is point (x,y) in cone of vision (radius,radians) of boid (this)
+	 * @param {Boid} point
+	 * @param {Object} options
+	 * @param {'left' | 'right'} options.side - side to include in the cone of vision, defaults to 'both'
+	 */
+	testPointVisibility(point, {side}) {
+		const dx = this.x - point.x
+		const dy = this.y - point.y
 
 		const distance = Math.sqrt(dx**2 + dy**2)
 		if(distance > this.vision.radius)
@@ -334,6 +428,11 @@ class Boid {
 		return true
 	}
 
+	/**
+	 * @param {Object} vector
+	 * @param {number} vector.dx
+	 * @param {number} vector.dy
+	 */
 	angleFromDeltas({dx, dy}) {
 		// TODO: is this a poor man's atan2?
 		return Math.atan(dx / dy) 
@@ -341,6 +440,11 @@ class Boid {
 			+ (dy > 0 && dx < 0 ? Math.PI * 2 : 0)
 	}
 
+	/**
+	 * 
+	 * @param {number} alpha 
+	 * @param {number} beta 
+	 */
 	absoluteAngleDifference(alpha, beta) {
 		const phi = Math.abs(beta - alpha) % (Math.PI * 2)
 		const distance = phi > Math.PI 

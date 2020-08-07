@@ -1,9 +1,21 @@
 self.importScripts('boid.js')
 
+/** @type HTMLCanvasElement */
 let canvas
 let isInit = false // init canvas only once
-let cursor, lastX, lastY, hover // mouse controls
-let boids = [] // entities
+
+// mouse controls
+/** @type Boid */
+let cursor
+/** @type number */
+let lastX
+/** @type number */
+let lastY
+/** @type boolean */
+let hover
+
+/** @type Array<Boid> - entities*/
+let boids = []
 
 onmessage = function(event) {
 	if(!isInit && 'canvas' in event.data) {
@@ -51,6 +63,10 @@ onmessage = function(event) {
 	}
 }
 
+/**
+ * 
+ * @param {CanvasRenderingContext2D} ctx 
+ */
 function init(ctx) {	
 	cursor = new Boid({
 		x: 450,
@@ -73,6 +89,11 @@ function init(ctx) {
 	loop(ctx, boids)
 }
 
+/**
+ * @param {HTMLCanvasElement} box 
+ * @param {Array<Boid>} boids 
+ * @param {DOMHighResTimeStamp} deltaTime 
+ */
 function update(box, boids, deltaTime) {
 	boids.forEach(boid => {
 		boid.update({points: [...boids, cursor], box, deltaTime})
@@ -84,6 +105,10 @@ function update(box, boids, deltaTime) {
 	}
 }
 
+/**
+ * @param {CanvasRenderingContext2D} ctx 
+ * @param {Array<Boid>} boids 
+ */
 function draw(ctx, boids) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 	boids.forEach(boid => {
@@ -96,12 +121,21 @@ function draw(ctx, boids) {
 	}
 }
 
+/**
+ * @param {CanvasRenderingContext2D} ctx 
+ * @param {Array<Boid>} boids 
+ */
 function loop(ctx, boids) {
 	loopUpdate(ctx, boids)
 	loopDraw(ctx, boids)
 }
 
 let newFrame = false
+/**
+ * @param {CanvasRenderingContext2D} ctx 
+ * @param {Array<Boid>} boids 
+ * @param {DOMHighResTimeStamp?} lastTime 
+ */
 function loopUpdate(ctx, boids, lastTime = performance.now()) {
 	const currentTime = performance.now()
 	setTimeout(() => loopUpdate(ctx, boids, newFrame ? currentTime : lastTime), 8)
@@ -111,6 +145,10 @@ function loopUpdate(ctx, boids, lastTime = performance.now()) {
 	newFrame = false
 }
 
+/**
+ * @param {CanvasRenderingContext2D} ctx 
+ * @param {Array<Boid>} boids 
+ */
 function loopDraw(ctx, boids) {
 	requestAnimationFrame((time) => {
 		newFrame = true
@@ -120,6 +158,13 @@ function loopDraw(ctx, boids) {
 	})
 }
 
+/**
+ * 
+ * @param {CanvasRenderingContext2D} ctx 
+ * @param {number} x 
+ * @param {number} y 
+ * @param {CanvasColor} color 
+ */
 function drawPoint(ctx, x, y, color = 'black') {
 	const size = 3
 	ctx.fillStyle = color

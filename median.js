@@ -7,6 +7,10 @@
  * 
  */
 
+/**
+ * Median Estimate For Circular Data
+ * @param {Array<number>} x - array of radians (angles or other circular data modulo 2𝜋)
+ */
 function circularMedian(x) {
 	const sx = [...x].sort()
 	const difsin = []
@@ -28,6 +32,9 @@ function circularMedian(x) {
 	return averageAngle(cm)
 }
 
+/**
+ * @param {Array<number>} x
+ */
 function averageAngle(array) {
 	const y = array.reduce((sum, current) => sum + Math.sin(current), 0)
 	const x = array.reduce((sum, current) => sum + Math.cos(current), 0)
@@ -37,6 +44,9 @@ function averageAngle(array) {
 	// If both x and y are zero, then no circular mean exists, so assign it a large number
 }
 
+/**
+ * @param {Array<number>} x
+ */
 function checkeven(x) {
 	const sx = [...x].sort()
 	const check = []
@@ -53,6 +63,9 @@ function checkeven(x) {
 	return check.filter(x => x !== Infinity)
 }
 
+/**
+ * @param {Array<number>} x
+ */
 function checkodd(x) {
 	const sx = [...x].sort()
 	const check = []
@@ -69,6 +82,9 @@ function checkodd(x) {
 	return check.filter(x => x !== Infinity)
 }
 
+/**
+ * @param {Array<number>} x
+ */
 function posmedf(x) {
 	const sx = [...x].sort()
 	const sx2 = [...sx]
