@@ -89,19 +89,71 @@ function init(ctx) {
 	loop(ctx, boids)
 }
 
+
+/**
+ * Split canvas into square cells of length equal to the maximum vision radius of a Boid.
+ * 
+ * Each boid is associated to a cell based on its (x,y) coordinates.
+ * Each boid is also associated to all of its neighboring cells (incl. diagonals).
+ * 
+ * **Result**: all the boids one boid *might* see are associated to this boid's current cell
+ * 
+ * @param {HTMLCanvasElement} box 
+ * @param {Array<Boid>} boids 
+ */
+function gridSplit({width, height}, boids) {
+	const maxVisionRange = Math.max(...boids.map(({vision}) => vision.radius))
+	const nbColumns = Math.ceil(width / maxVisionRange)
+	const nbRows = Math.ceil(height / maxVisionRange)
+	/** @type {Boid[][][]} */
+	const cells = new Array(nbColumns)
+		.fill(null)
+		.map(() => new Array(nbRows)
+			.fill(null)
+			.map(() => [])
+		)
+
+	/** @type {Map<Boid,Array<Boid>>} */
+	const map = new Map()
+
+	boids.forEach(boid => {
+		const {x, y} = boid
+		const column = Math.floor(Math.min(x, width) / maxVisionRange)
+		const row = Math.floor(Math.min(y, height) / maxVisionRange)
+		map.set(boid, cells[column][row])
+		cells[column][row].push(boid)
+
+		void [-1, 0, 1].forEach(deltaCol => {
+			void [-1, 0, 1].forEach(deltaRow => {
+				const targetCol = column + deltaCol
+				if(targetCol < 0 || targetCol >= nbColumns)
+					return
+				const targetRow = row + deltaRow
+				if(targetRow < 0 || targetRow >= nbRows)
+					return
+				cells[targetCol][targetRow].push(boid)
+			})
+		})
+	})
+
+	return map
+}
+
 /**
  * @param {HTMLCanvasElement} box 
  * @param {Array<Boid>} boids 
  * @param {DOMHighResTimeStamp} deltaTime 
  */
 function update(box, boids, deltaTime) {
+	const map = gridSplit(box, [...boids, cursor])
+
 	boids.forEach(boid => {
-		boid.update({points: [...boids, cursor], box, deltaTime})
+		boid.update({points: map.get(boid), box, deltaTime})
 	})
 	if(hover) {
 		cursor.x = lastX
 		cursor.y = lastY
-		cursor.update({points: boids, box, deltaTime})
+		cursor.update({points: map.get(cursor), box, deltaTime})
 	}
 }
 
