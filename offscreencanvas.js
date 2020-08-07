@@ -102,7 +102,7 @@ function init(ctx) {
  * @param {Array<Boid>} boids 
  */
 function gridSplit({width, height}, boids) {
-	const maxVisionRange = Math.max(...boids.map(({vision}) => vision.radius))
+	const maxVisionRange = Math.max(...boids.map(({vision}) => vision.radius)) || 1
 	const nbColumns = Math.ceil(width / maxVisionRange) + 1
 	const nbRows = Math.ceil(height / maxVisionRange) + 1
 	/** @type {Boid[][][]} */
@@ -118,16 +118,23 @@ function gridSplit({width, height}, boids) {
 
 	boids.forEach(boid => {
 		const {x, y} = boid
-		const column = Math.floor(Math.min(x, width) / maxVisionRange)
-		const row = Math.floor(Math.min(y, height) / maxVisionRange)
-		map.set(boid, cells[column][row])
+		
+		const maxX = Math.min(x, width)
+		const column = Math.floor(maxX / maxVisionRange)
+		const maxColumn = Math.min(column, nbColumns - 1)
+
+		const maxY = Math.min(y, height)
+		const row = Math.floor(maxY / maxVisionRange)
+		const maxRow = Math.min(row, nbRows - 1)
+		
+		map.set(boid, cells[maxColumn][maxRow])
 
 		void [-1, 0, 1].forEach(deltaCol => {
 			void [-1, 0, 1].forEach(deltaRow => {
-				const targetCol = column + deltaCol
+				const targetCol = maxColumn + deltaCol
 				if(targetCol < 0 || targetCol >= nbColumns)
 					return
-				const targetRow = row + deltaRow
+				const targetRow = maxRow + deltaRow
 				if(targetRow < 0 || targetRow >= nbRows)
 					return
 				cells[targetCol][targetRow].push(boid)
