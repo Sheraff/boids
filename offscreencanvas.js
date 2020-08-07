@@ -1,5 +1,7 @@
 self.importScripts('boid.js')
 
+const DEBUG = false
+
 /** @type HTMLCanvasElement */
 let canvas
 let isInit = false // init canvas only once
@@ -156,6 +158,12 @@ function update(box, boids, deltaTime) {
 
 	const map = gridSplit(box, allEntities)
 
+	if(DEBUG) {
+		boids.forEach(boid => boid.color = 'black')
+		map.get(boids[0]).forEach(boid => boid.color = 'red')
+		boids[0].color = 'purple'
+	}
+
 	boids.forEach(boid => {
 		boid.update({points: map.get(boid) || allEntities, box, deltaTime})
 	})
@@ -172,6 +180,9 @@ function update(box, boids, deltaTime) {
  */
 function draw(ctx, boids) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+	if(DEBUG) {
+		drawGrid(ctx, boids)
+	}
 	boids.forEach(boid => {
 		boid.draw(ctx)
 	})
@@ -220,7 +231,6 @@ function loopDraw(ctx, boids) {
 }
 
 /**
- * 
  * @param {CanvasRenderingContext2D} ctx 
  * @param {number} x 
  * @param {number} y 
@@ -239,4 +249,33 @@ function drawPoint(ctx, x, y, color = 'black') {
 		2 * Math.PI,
 	)
 	ctx.fill()
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx 
+ * @param {Array<Boid>} boids 
+ * @param {CanvasColor} color 
+ */
+function drawGrid(ctx, boids, color = 'black') {
+	const {width, height} = ctx.canvas
+	const maxVisionRange = Math.max(...boids.map(({vision}) => vision.radius)) || 1
+	const nbColumns = Math.ceil(width / maxVisionRange)
+	const nbRows = Math.ceil(height / maxVisionRange)
+	
+	ctx.strokeStyle = color
+	
+	for(let i = 1; i < nbColumns; i++) {
+		ctx.beginPath()
+		ctx.moveTo(maxVisionRange * i, 0)
+		ctx.lineTo(maxVisionRange * i, height)
+		ctx.stroke()
+	}
+
+	for(let i = 1; i < nbRows; i++) {
+		ctx.beginPath()
+		ctx.moveTo(0, maxVisionRange * i)
+		ctx.lineTo(width, maxVisionRange * i)
+		ctx.stroke()
+	}
+
 }
