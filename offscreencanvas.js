@@ -121,7 +121,6 @@ function gridSplit({width, height}, boids) {
 		const column = Math.floor(Math.min(x, width) / maxVisionRange)
 		const row = Math.floor(Math.min(y, height) / maxVisionRange)
 		map.set(boid, cells[column][row])
-		cells[column][row].push(boid)
 
 		void [-1, 0, 1].forEach(deltaCol => {
 			void [-1, 0, 1].forEach(deltaRow => {
