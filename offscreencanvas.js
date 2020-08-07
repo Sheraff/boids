@@ -103,8 +103,9 @@ function init(ctx) {
  */
 function gridSplit({width, height}, boids) {
 	const maxVisionRange = Math.max(...boids.map(({vision}) => vision.radius)) || 1
-	const nbColumns = Math.ceil(width / maxVisionRange) + 1
-	const nbRows = Math.ceil(height / maxVisionRange) + 1
+	const nbColumns = Math.ceil(width / maxVisionRange)
+	const nbRows = Math.ceil(height / maxVisionRange)
+	
 	/** @type {Boid[][][]} */
 	const cells = new Array(nbColumns)
 		.fill(null)
@@ -121,20 +122,18 @@ function gridSplit({width, height}, boids) {
 		
 		const maxX = Math.min(x, width)
 		const column = Math.floor(maxX / maxVisionRange)
-		const maxColumn = Math.min(column, nbColumns - 1)
 
 		const maxY = Math.min(y, height)
 		const row = Math.floor(maxY / maxVisionRange)
-		const maxRow = Math.min(row, nbRows - 1)
 		
-		map.set(boid, cells[maxColumn][maxRow])
+		map.set(boid, cells[column][row])
 
 		void [-1, 0, 1].forEach(deltaCol => {
 			void [-1, 0, 1].forEach(deltaRow => {
-				const targetCol = maxColumn + deltaCol
+				const targetCol = column + deltaCol
 				if(targetCol < 0 || targetCol >= nbColumns)
 					return
-				const targetRow = maxRow + deltaRow
+				const targetRow = row + deltaRow
 				if(targetRow < 0 || targetRow >= nbRows)
 					return
 				cells[targetCol][targetRow].push(boid)
@@ -151,16 +150,19 @@ function gridSplit({width, height}, boids) {
  * @param {DOMHighResTimeStamp} deltaTime 
  */
 function update(box, boids, deltaTime) {
-	const allEntities = [...boids, cursor]
+	const allEntities = [...boids]
+	if(hover && cursor.x && cursor.y)
+		allEntities.push(cursor)
+
 	const map = gridSplit(box, allEntities)
 
 	boids.forEach(boid => {
-		boid.update({points: map.get(boid), box, deltaTime})
+		boid.update({points: map.get(boid) || allEntities, box, deltaTime})
 	})
 	if(hover) {
 		cursor.x = lastX
 		cursor.y = lastY
-		cursor.update({points: map.get(cursor), box, deltaTime})
+		cursor.update({points: map.get(cursor) || allEntities, box, deltaTime})
 	}
 }
 
