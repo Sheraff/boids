@@ -24,17 +24,22 @@ pub fn console_log(s: &str) {
 	log(s);
 }
 
+
+static mut UNIVERSE: Option<universe::Universe> = None;
+
 #[wasm_bindgen]
 pub fn send_context(ctx: web_sys::CanvasRenderingContext2d, height: f64, width: f64) {
-	let mut universe = universe::Universe::new(ctx, height, width);
-	universe.tick();
-	universe.render();
-	log("oyo");
+	unsafe {
+		UNIVERSE = Some(universe::Universe::new(ctx, height, width));
+	}
 }
 
 #[wasm_bindgen]
-pub fn request_frame() {
-	log("coucou");
+pub fn request_frame(delta_time: f64) {
+	unsafe {
+		UNIVERSE.as_mut().unwrap().tick(delta_time);
+		UNIVERSE.as_mut().unwrap().render();
+	}
 }
 
 #[wasm_bindgen(start)]

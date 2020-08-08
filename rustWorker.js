@@ -25,13 +25,13 @@ const ready = Promise.all([
 ready.then(() => {
 	console.log('READY', wasm, ctx)
 	wasm.console_log('jean michel')
-	wasm.send_context(ctx)
-	// loop(wasm.request_frame)
+	wasm.send_context(ctx, ctx.canvas.height, ctx.canvas.width)
+	loop(wasm.request_frame)
 })
 
-function loop (callback) {
-	requestAnimationFrame(() => {
-		callback()
-		loop(callback)
+function loop (callback, start = performance.now()) {
+	requestAnimationFrame((time) => {
+		callback(time - start)
+		loop(callback, time)
 	})
 }

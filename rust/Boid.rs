@@ -1,4 +1,5 @@
 use std::f64::consts::PI;
+use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
 
 pub struct Canvas {
@@ -7,28 +8,26 @@ pub struct Canvas {
 	pub padding: f64
 }
 
+#[wasm_bindgen]
 extern "C" {
-	fn srand() -> u32;
-	fn rand() -> u32;
+	#[wasm_bindgen(js_namespace = console)]
+	fn log(s: &str);
+
+	#[wasm_bindgen(js_namespace = console, js_name = log)]
+	fn log_f64(a: f64);
+
+	#[wasm_bindgen(js_namespace = Math)]
+	fn random() -> f64;
 }
 
-fn random() -> f64{
-	let number: u32;
-	unsafe {
-		srand();
-		number = rand();
-	}
-	(number as f64) / (u32::MAX as f64)
+pub struct Point {
+	pub x: f64,
+	pub y: f64
 }
 
-struct Point {
-	x: f64,
-	y: f64
-}
-
-struct Cone {
-	radius: f64,
-	radians: f64
+pub struct Cone {
+	pub radius: f64,
+	pub radians: f64
 }
 
 struct Speed {
@@ -45,8 +44,8 @@ struct Body {
 }
 
 pub struct Boid {
-	point: Point,
-	vision: Cone,
+	pub point: Point,
+	pub vision: Cone,
 	angle: Angle,
 	weight: f64,
 	angular_speed: Speed,
@@ -158,17 +157,17 @@ impl Boid {
 		if self.angular_speed.max == 0.0 { self.set_max_angular_speed(random()); }
 	}
 
-	pub fn update(&mut self, canvas: &Canvas, boids: Vec<&Boid>, delta_time: f64) {
+	pub fn update(&mut self, canvas: &Canvas, boids: &Vec<&Boid>, delta_time: f64) {
 		// default update speeds
-		self.angular_speed.value = self.angular_speed.value * 0.9 * delta_time;
-		self.linear_speed.value = self.linear_speed.value + 0.03 * delta_time;
+		self.angular_speed.value *= 0.9 * delta_time;
+		self.linear_speed.value += 0.03 * delta_time;
 		
 		// environment update speeds
 		let visible_points = self.filter_points_by_visibility(boids);
 		let (sees_wall, wall_angle, wall_distance) = self.test_wall_visibility(canvas);
 		if sees_wall {
-			self.angular_speed.value = self.angular_speed.value + wall_angle.signum() / wall_distance * 2.0 * delta_time;
-			self.linear_speed.value = self.linear_speed.value - 0.03 * delta_time;
+			self.angular_speed.value += wall_angle.signum() / wall_distance * 2.0 * delta_time;
+			self.linear_speed.value -= 0.03 * delta_time;
 		}
 		
 		// cap speeds
@@ -177,15 +176,17 @@ impl Boid {
 
 		// default update positions
 		self.angle.set(self.angle.get() + self.angular_speed.value);
-		self.point.x = self.point.x - self.angle.get().sin() * self.linear_speed.value;
-		self.point.y = self.point.y - self.angle.get().cos() * self.linear_speed.value;
+		self.point.x -= self.angle.get().sin() * self.linear_speed.value;
+		self.point.y -= self.angle.get().cos() * self.linear_speed.value;
 
 		// cap positions
 		self.point.x = self.point.x.max(canvas.padding).min(canvas.width - canvas.padding);
 		self.point.y = self.point.y.max(canvas.padding).min(canvas.height - canvas.padding);
+
+		self.update_drawing_angle(delta_time);
 	}
 
-	fn filter_points_by_visibility<'a>(&self, boids: Vec<&'a Boid>) -> Vec<&'a Boid> {
+	fn filter_points_by_visibility<'a>(&self, boids: &Vec<&'a Boid>) -> Vec<&'a Boid> {
 		boids
 			.iter()
 			.filter(|boid| self.test_point_visibility(&boid.point))
@@ -278,17 +279,17 @@ impl Boid {
 
 	pub fn update_drawing_angle(&mut self, delta_time: f64) {
 		if self.angle.get() - self.body.angle > PI {
-			self.body.angle = self.body.angle + PI * 2.0;
+			self.body.angle += PI * 2.0;
 		} else if self.body.angle - self.angle.get() > PI {
-			self.body.angle = self.body.angle - PI * 2.0;
+			self.body.angle -= PI * 2.0;
 		}
 
 		let direction = (self.angle.get() - self.body.angle).signum();
 		let difference = (self.angle.get() - self.body.angle).abs();
 		let limit = PI * 2.0 / 45.0 * delta_time;
 		let capped_diff = if direction > 0.0 { difference.min(limit) } else { difference.max(limit) };
-		self.body.angle = self.body.angle + direction * capped_diff;
-		self.body.angle = self.body.angle % (PI * 2.0);
+		self.body.angle += direction * capped_diff;
+		self.body.angle %= PI * 2.0;
 	}
 
 	pub fn get_drawing_data(&self) -> ((f64, f64), (f64, f64), (f64, f64)) {
