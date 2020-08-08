@@ -46,7 +46,6 @@ impl Universe {
 			
 			(*boid).update(&self.canvas, &boids, delta_time / 15.0);
 		}
-		// self.boids[0].update(&self.canvas, vec![], 1.0);
 	}
 
 	pub fn render(&self) {
