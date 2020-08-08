@@ -167,7 +167,7 @@ impl Boid {
 		let (sees_wall, wall_angle, wall_distance) = self.test_wall_visibility(canvas);
 		if sees_wall {
 			self.angular_speed.value += wall_angle.signum() / wall_distance * 2.0 * delta_time;
-			self.linear_speed.value -= 0.03 * delta_time;
+			self.linear_speed.value -= 0.03 * wall_distance / self.vision.radius * delta_time;
 		}
 		
 		// cap speeds
@@ -259,18 +259,12 @@ impl Boid {
 			}
 
 			returns
-				.sort_by(|a, b| if a.1 - b.1 > canvas.padding * 2.0 {
+				.sort_unstable_by(|a, b| if (a.1 - b.1).abs() > canvas.padding * 2.0 {
 					a.1.partial_cmp(&b.1).unwrap()
-					// if a.1 > b.1 { std::cmp::Ordering::Greater }
-					// else if a.1 == b.1 { std::cmp::Ordering::Equal }
-					// else { std::cmp::Ordering::Less }
 				} else {
 					let a_angle_diff = absolute_angle_difference(a.0, self.angle.get());
 					let b_angle_diff = absolute_angle_difference(b.0, self.angle.get());
 					b_angle_diff.partial_cmp(&a_angle_diff).unwrap()
-					// if a_angle_diff < b_angle_diff { std::cmp::Ordering::Greater }
-					// else if a_angle_diff == b_angle_diff { std::cmp::Ordering::Equal }
-					// else { std::cmp::Ordering::Less }
 				});
 
 			return (true, returns[0].0, returns[0].1)
@@ -329,7 +323,7 @@ impl Boid {
 
 fn angle_from_deltas(dx: f64, dy: f64) -> f64 {
 	let unsigned_angle = (dx / dy).atan();
-	if dx < 0.0 {
+	if dy < 0.0 {
 		unsigned_angle + PI
 	} else if dx < 0.0 {
 		unsigned_angle + PI * 2.0

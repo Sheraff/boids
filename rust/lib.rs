@@ -31,6 +31,14 @@ static mut UNIVERSE: Option<universe::Universe> = None;
 pub fn send_context(ctx: web_sys::CanvasRenderingContext2d, height: f64, width: f64) {
 	unsafe {
 		UNIVERSE = Some(universe::Universe::new(ctx, height, width));
+		
+	}
+}
+
+#[wasm_bindgen]
+pub fn get_boids_count() -> u32 {
+	unsafe {
+		UNIVERSE.as_mut().unwrap().boids.len() as u32
 	}
 }
 

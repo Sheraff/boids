@@ -3,7 +3,7 @@ mod boid;
 
 pub struct Universe {
 	canvas: boid::Canvas,
-	boids: Vec<boid::Boid>,
+	pub boids: Vec<boid::Boid>,
 	context: web_sys::CanvasRenderingContext2d
 }
 
@@ -13,12 +13,12 @@ impl Universe {
 		let canvas = boid::Canvas {
 			height,
 			width,
-			padding: 10.0
+			padding: 12.5
 		};
 
 		let mut boids: Vec<boid::Boid> = vec![];
 
-		for _ in 1..100 {
+		for _ in 1..200 {
 			let mut boid = boid::Boid::new();
 			boid.set_all_initial(&canvas);
 			boids.push(boid);
