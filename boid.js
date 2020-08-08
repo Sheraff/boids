@@ -361,25 +361,25 @@ class Boid {
 		if(futureX < BOUND) { // left
 			returns.push({
 				angle: this.angle / (Math.PI / 2) - 1,
-				distance: this.x
+				distance: this.x - BOUND
 			})
 		}
 		if (futureX > width - BOUND) { // right
 			returns.push({
 				angle: this.angle / (Math.PI / 2) + 1,
-				distance: width - this.x
+				distance: width - this.x - BOUND
 			})
 		}
 		if (futureY < BOUND) { // top
 			returns.push({
 				angle: this.angle / (Math.PI / 2),
-				distance: this.y
+				distance: this.y - BOUND
 			})
 		}
 		if (futureY > height - BOUND) { // bottom
 			returns.push({
 				angle: this.angle / (Math.PI / 2) - 2,
-				distance: height - this.y
+				distance: height - this.y - BOUND
 			})
 		}
 
@@ -390,7 +390,7 @@ class Boid {
 			return returns[0]
 
 		// cheat
-		if(this.x < BOUND * 10 && this.x < BOUND * 10) {
+		if(this.x < BOUND * 10 && this.y < BOUND * 10) {
 			return {
 				angle: this.angularSpeed, 
 				distance: Math.min(Math.abs(this.x - BOUND), Math.abs(this.y - BOUND))
