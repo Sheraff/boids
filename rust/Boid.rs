@@ -20,22 +20,26 @@ extern "C" {
 	fn random() -> f64;
 }
 
+#[derive(Clone)]
 pub struct Point {
 	pub x: f64,
 	pub y: f64
 }
 
+#[derive(Clone)]
 pub struct Cone {
 	pub radius: f64,
 	pub radians: f64
 }
 
+#[derive(Clone)]
 struct Speed {
 	min: f64,
 	max: f64,
 	value: f64
 }
 
+#[derive(Clone)]
 struct Body {
 	size: f64,
 	width: f64,
@@ -43,7 +47,11 @@ struct Body {
 	angle: f64
 }
 
+static mut ID_COUNT: u32 = 0;
+
+#[derive(Clone)]
 pub struct Boid {
+	pub id: u32,
 	pub point: Point,
 	pub vision: Cone,
 	angle: Angle,
@@ -53,6 +61,7 @@ pub struct Boid {
 	body: Body
 }
 
+#[derive(Clone)]
 struct Angle {
 	value: f64
 }
@@ -80,7 +89,13 @@ impl Angle {
 
 impl Boid {
 	pub fn new() -> Boid {
+		let id: u32;
+		unsafe {
+			ID_COUNT += 1;
+			id = ID_COUNT;
+		}
 		Boid {
+			id,
 			point: Point {
 				x: 0.0, 
 				y: 0.0
@@ -188,7 +203,9 @@ impl Boid {
 
 	fn filter_points_by_visibility<'a>(&self, boids: &Vec<&'a Boid>) -> Vec<&'a Boid> {
 		boids
+			.clone()
 			.iter()
+			// .into_iter()
 			.filter(|boid| self.test_point_visibility(&boid.point))
 			.map(|&boid| boid)
 			.collect()
