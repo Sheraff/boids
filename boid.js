@@ -237,21 +237,21 @@ class Boid {
 				this.linearSpeed -= .03 * wall.distance / this.vision.radius * timeMultiplier
 			}
 
-			// const tooClose = this.findClosest(visiblePoints)
-			// if(tooClose) {
-			// 	this.angularSpeed += tooClose * this.behaviors['repulsion from individuals'] * timeMultiplier
-			// 	this.linearSpeed -= .03 * timeMultiplier
-			// }
+			const tooClose = this.findClosest(visiblePoints)
+			if(tooClose) {
+				this.angularSpeed += tooClose * this.behaviors['repulsion from individuals'] * timeMultiplier
+				this.linearSpeed -= .03 * timeMultiplier
+			}
 
-			// const result = this.findGroupDirection(visiblePoints)
-			// if(result && result.count > 4) {
-			// 	this.angularSpeed += Math.sign(result.angle) * this.behaviors['imitation of direction'] * timeMultiplier
-			// }
+			const result = this.findGroupDirection(visiblePoints)
+			if(result && result.count > 4) {
+				this.angularSpeed += Math.sign(result.angle) * this.behaviors['imitation of direction'] * timeMultiplier
+			}
 
-			// const direction = this.findDensityDirection(visiblePoints)
-			// if(direction) {
-			// 	this.angularSpeed += direction * this.behaviors['attraction to group'] * timeMultiplier
-			// }
+			const direction = this.findDensityDirection(visiblePoints)
+			if(direction) {
+				this.angularSpeed += direction * this.behaviors['attraction to group'] * timeMultiplier
+			}
 		}
 
 		this.linearSpeed = Math.max(this.minLinearSpeed, Math.min(this.linearSpeed, this.maxLinearSpeed))
