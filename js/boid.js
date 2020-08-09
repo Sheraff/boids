@@ -227,7 +227,7 @@ class Boid {
 		let y = this.y
 
 		adjust: {
-			this.angularSpeed *= .9 * timeMultiplier
+			this.angularSpeed *= .9 ** timeMultiplier
 			this.linearSpeed += .03 * timeMultiplier
 			const visiblePoints = points.filter(point => point !== this && this.testPointVisibility(point))
 

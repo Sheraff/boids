@@ -62,8 +62,16 @@ impl Angle {
 		self.value = Angle::modulo(new_value);
 	}
 
-	fn get(&self) -> f64{
+	fn get(&self) -> f64 {
 		self.value
+	}
+
+	fn sin(&self) -> f64 {
+		self.value.sin()
+	}
+
+	fn cos(&self) -> f64 {
+		self.value.cos()
 	}
 
 	fn modulo(value: f64) -> f64 {
@@ -72,6 +80,11 @@ impl Angle {
 		} else {
 			value % (PI * 2.0)
 		}
+	}
+}
+impl std::ops::AddAssign<f64> for Angle {
+	fn add_assign(&mut self, other: f64) {
+		self.value = Angle::modulo(self.value + other);
 	}
 }
 
@@ -178,33 +191,33 @@ impl Boid {
 		if self.angular_speed.max == 0.0 { self.set_max_angular_speed(random()); }
 	}
 
-	pub fn update(&mut self, canvas: &Canvas, boids: &Vec<&Boid>, delta_time: f64) {
+	pub fn update(&mut self, canvas: &Canvas, boids: &Vec<&Boid>, frames: f64) {
 		// default update speeds
-		self.angular_speed.value *= 0.9 * delta_time;
-		self.linear_speed.value += 0.03 * delta_time;
+		self.angular_speed.value *= (0.9_f64).powf(frames);
+		self.linear_speed.value += 0.03 * frames;
 		
 		// environment update speeds
 		let (sees_wall, wall_angle, wall_distance) = self.test_wall_visibility(canvas);
 		if sees_wall {
-			self.angular_speed.value += wall_angle.signum() / wall_distance * 2.0 * delta_time;
-			self.linear_speed.value -= 0.03 * wall_distance / self.vision.radius * delta_time;
+			self.angular_speed.value += wall_angle.signum() / wall_distance * 2.0 * frames;
+			self.linear_speed.value -= 0.03 * wall_distance / self.vision.radius * frames;
 		}
 
 		let visible_points = self.filter_points_by_visibility(boids, &Side::Both);
 		let (too_close, direction) = self.find_closest_direction(&visible_points);
 		if too_close {
-			self.angular_speed.value += direction * 0.2 * delta_time;
-			self.linear_speed.value -= 0.03 * delta_time;
+			self.angular_speed.value += direction * 0.2 * frames;
+			self.linear_speed.value -= 0.03 * frames;
 		}
 
 		let (sees_group, angle, count) = self.find_group_direction(&visible_points);
 		if sees_group && count > 4 {
-			self.angular_speed.value += angle.signum() * 0.07 * delta_time;
+			self.angular_speed.value += angle.signum() * 0.07 * frames;
 		}
 
 		let (sees_group, direction) = self.find_density_direction(&visible_points);
 		if sees_group {
-			self.angular_speed.value += direction * 0.02 * delta_time;
+			self.angular_speed.value += direction * 0.02 * frames;
 		}
 		
 		// cap speeds
@@ -212,15 +225,13 @@ impl Boid {
 		self.linear_speed.value = self.linear_speed.value.min(self.linear_speed.max).max(self.angular_speed.min);
 
 		// default update positions
-		self.angle.set(self.angle.get() + self.angular_speed.value);
-		self.point.x -= self.angle.get().sin() * self.linear_speed.value;
-		self.point.y -= self.angle.get().cos() * self.linear_speed.value;
+		self.angle += self.angular_speed.value;
+		self.point.x -= self.angle.sin() * self.linear_speed.value;
+		self.point.y -= self.angle.cos() * self.linear_speed.value;
 
 		// cap positions
 		self.point.x = self.point.x.max(canvas.padding).min(canvas.width - canvas.padding);
 		self.point.y = self.point.y.max(canvas.padding).min(canvas.height - canvas.padding);
-
-		self.update_drawing_angle(delta_time);
 	}
 
 	fn filter_points_by_visibility<'a>(&self, boids: &Vec<&'a Boid>, side: &Side) -> Vec<&'a Boid> {
@@ -286,8 +297,8 @@ impl Boid {
 		}
 
 		let total_weight = boids.iter().fold(0.0, |sum, x| sum + x.weight);
-		let atan2_x = boids.iter().fold(0.0, |sum, x| sum + x.angle.get().sin() * x.weight) / total_weight;
-		let atan2_y = boids.iter().fold(0.0, |sum, x| sum + x.angle.get().cos() * x.weight) / total_weight;
+		let atan2_x = boids.iter().fold(0.0, |sum, x| sum + x.angle.sin() * x.weight) / total_weight;
+		let atan2_y = boids.iter().fold(0.0, |sum, x| sum + x.angle.cos() * x.weight) / total_weight;
 		let angle_mean = atan2_x.atan2(atan2_y);
 
 		let lesser_diff = angle_mean - self.angle.get();
@@ -314,36 +325,36 @@ impl Boid {
 	}
 
 	fn test_wall_visibility(&self, canvas: &Canvas) -> (bool, f64, f64) {
-		let future_x = self.point.x - self.angle.get().sin() * self.vision.radius;
-		let future_y = self.point.y - self.angle.get().cos() * self.vision.radius;
+		let future_x = self.point.x - self.angle.sin() * self.vision.radius;
+		let future_y = self.point.y - self.angle.cos() * self.vision.radius;
 		let mut returns: Vec<(f64, f64)> = vec![];
 		let mut count = 0;
 
 		if future_x < canvas.padding { // left
 			count = count + 1;
 			returns.push((
-				self.angle.get() / (PI / 2.0) - 1.0,
+				Angle::modulo(self.angle.get() / (PI / 2.0) - 1.0),
 				self.point.x - canvas.padding
 			));
 		}
 		if future_x > canvas.width - canvas.padding { // right
 			count = count + 1;
 			returns.push((
-				self.angle.get() / (PI / 2.0) + 1.0,
+				Angle::modulo(self.angle.get() / (PI / 2.0) - 3.0),
 				canvas.width - canvas.padding - self.point.x
 			));
 		}
 		if future_y < canvas.padding { // top
 			count = count + 1;
 			returns.push((
-				self.angle.get() / (PI / 2.0),
+				Angle::modulo(self.angle.get() / (PI / 2.0)),
 				self.point.y - canvas.padding
 			));
 		}
 		if future_y > canvas.height - canvas.padding { // bottom
 			count = count + 1;
 			returns.push((
-				self.angle.get() / (PI / 2.0) - 2.0,
+				Angle::modulo(self.angle.get() / (PI / 2.0) - 2.0),
 				canvas.height - canvas.padding - self.point.y
 			));
 		}
@@ -375,7 +386,7 @@ impl Boid {
 		}
 	}
 
-	pub fn update_drawing_angle(&mut self, delta_time: f64) {
+	pub fn update_drawing_angle(&mut self, frames: f64) {
 		if self.angle.get() - self.body.angle > PI {
 			self.body.angle += PI * 2.0;
 		} else if self.body.angle - self.angle.get() > PI {
@@ -384,7 +395,7 @@ impl Boid {
 
 		let direction = (self.angle.get() - self.body.angle).signum();
 		let difference = (self.angle.get() - self.body.angle).abs();
-		let limit = PI * 2.0 / 45.0 * delta_time;
+		let limit = PI * 2.0 / 45.0 * frames;
 		let capped_diff = if direction > 0.0 { difference.min(limit) } else { difference.max(limit) };
 		self.body.angle += direction * capped_diff;
 		self.body.angle %= PI * 2.0;
@@ -413,7 +424,8 @@ impl Boid {
 		)
 	}
 
-	pub fn draw(&self, canvas: &Canvas, context: &web_sys::CanvasRenderingContext2d) {
+	pub fn draw(&mut self, canvas: &Canvas, context: &web_sys::CanvasRenderingContext2d, frames: f64) {
+		self.update_drawing_angle(frames);
 		let data = self.get_drawing_data();
 		context.set_fill_style(&JsValue::from_str(&self.body.color));
 		context.begin_path();

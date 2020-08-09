@@ -30,7 +30,7 @@ extern "C" {
 	fn send_message(s: &str);
 	
 	#[wasm_bindgen(js_name = sendMessage)]
-    fn send_key_value(s: &str, v: f64);
+	fn send_key_value(s: &str, v: f64);
 }
 
 
@@ -54,8 +54,9 @@ pub fn get_boids_count() -> u32 {
 #[wasm_bindgen]
 pub fn request_frame(delta_time: f64) {
 	unsafe {
-		UNIVERSE.as_mut().unwrap().tick(delta_time);
-		UNIVERSE.as_mut().unwrap().render();
+		let frames = delta_time / 15.0;
+		UNIVERSE.as_mut().unwrap().tick(frames);
+		UNIVERSE.as_mut().unwrap().render(frames);
 	}
 }
 

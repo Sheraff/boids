@@ -33,7 +33,7 @@ impl Universe {
 		}
 	}
 
-	pub fn tick(&mut self, delta_time: f64) {
+	pub fn tick(&mut self, frames: f64) {
 		let clone = self.boids.clone();
 		let references: Vec<&boid::Boid> = clone.iter().collect();
 		let (boids_map, boids_cells) = grid_split(&self.canvas, references);
@@ -44,14 +44,14 @@ impl Universe {
 				None => &empty
 			};
 			
-			boid.update(&self.canvas, &boids, delta_time / 15.0);
+			boid.update(&self.canvas, &boids, frames);
 		}
 	}
 
-	pub fn render(&self) {
+	pub fn render(&mut self, frames: f64) {
 		self.context.clear_rect(0.0, 0.0, self.canvas.width, self.canvas.height);
-		for boid in self.boids.iter() {
-			boid.draw(&self.canvas, &self.context);
+		for boid in self.boids.iter_mut() {
+			boid.draw(&self.canvas, &self.context, frames);
 		}
 	}
 }
