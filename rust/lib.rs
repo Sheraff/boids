@@ -24,7 +24,7 @@ pub fn console_log(s: &str) {
 	log(s);
 }
 
-#[wasm_bindgen(module = "/interop.js")]
+#[wasm_bindgen(module = "/js/interop.js")]
 extern "C" {
 	#[wasm_bindgen(js_name = sendMessage)]
 	fn send_message(s: &str);

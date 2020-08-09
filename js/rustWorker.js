@@ -1,4 +1,4 @@
-import * as wasm from "./pkg/boids.js"
+import * as wasm from "../pkg/boids.js"
 
 let ctx
 

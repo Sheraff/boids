@@ -1,4 +1,4 @@
-self.importScripts('boid.js')
+self.importScripts('/js/boid.js')
 
 const DEBUG = false
 
