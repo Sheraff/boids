@@ -17,6 +17,9 @@ extern "C" {
 	
 	#[wasm_bindgen(js_namespace = console, js_name = log)]
 	fn log_f64(a: f64);
+
+	#[wasm_bindgen(js_namespace = console, js_name = log)]
+	fn log_f64_f64(a: f64, b: f64);
 }
 
 #[wasm_bindgen]
@@ -37,9 +40,9 @@ extern "C" {
 static mut UNIVERSE: Option<universe::Universe> = None;
 
 #[wasm_bindgen]
-pub fn send_context(ctx: web_sys::CanvasRenderingContext2d, height: f64, width: f64) {
+pub fn send_context(ctx: web_sys::CanvasRenderingContext2d, width: f64, height: f64) {
 	unsafe {
-		UNIVERSE = Some(universe::Universe::new(ctx, height, width));
+		UNIVERSE = Some(universe::Universe::new(ctx, width, height));
 	}
 	send_message("coucou interop");
 }

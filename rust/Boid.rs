@@ -16,6 +16,9 @@ extern "C" {
 	#[wasm_bindgen(js_namespace = console, js_name = log)]
 	fn log_f64(a: f64);
 
+	#[wasm_bindgen(js_namespace = console, js_name = log)]
+	fn log_f64_f64(a: f64, b: f64);
+
 	#[wasm_bindgen(js_namespace = Math)]
 	fn random() -> f64;
 }
@@ -167,6 +170,7 @@ impl Boid {
 	pub fn set_initial_coordinates(&mut self, x: f64, y: f64) {
 		self.point.x = x;
 		self.point.y = y;
+		// log_f64_f64(x, y);
 	}
 
 	pub fn set_initial_angle(&mut self, angle: f64) {

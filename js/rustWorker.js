@@ -38,7 +38,7 @@ const ready = Promise.all([
 ready.then(() => {
 	console.log(wasm, ctx)
 	wasm.console_log('READY')
-	wasm.send_context(ctx, ctx.canvas.height, ctx.canvas.width)
+	wasm.send_context(ctx, ctx.canvas.width, ctx.canvas.height)
 	const count = wasm.get_boids_count()
 	postMessage({count})
 	init(wasm, ctx)
@@ -47,7 +47,8 @@ ready.then(() => {
 })
 
 function loopFrame(callback, preCallback, start = performance.now()) {
-	requestAnimationFrame((time) => {
+	requestAnimationFrame(() => {
+		const time = performance.now()
 		callback(time - start, FIELD_OF_VIEW)
 		loopFrame(callback, preCallback, time)
 		if(TIE_UPDATES_TO_FRAMES)

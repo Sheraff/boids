@@ -11,10 +11,10 @@ pub struct Universe {
 
 impl Universe {
 
-	pub fn new(context: web_sys::CanvasRenderingContext2d, height: f64, width: f64) -> Universe {
+	pub fn new(context: web_sys::CanvasRenderingContext2d, width: f64, height: f64) -> Universe {
 		let canvas = boid::Canvas {
-			height,
 			width,
+			height,
 			padding: 12.5
 		};
 
