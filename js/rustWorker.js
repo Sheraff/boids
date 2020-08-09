@@ -1,6 +1,5 @@
 import * as wasm from "../pkg/boids.js"
 
-let DEBUG = false
 let TIE_UPDATES_TO_FRAMES = true
 let FIELD_OF_VIEW = false
 let ctx

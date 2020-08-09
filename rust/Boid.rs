@@ -195,10 +195,15 @@ impl Boid {
 		self.angular_speed.value = 0.0;
 		self.angular_speed.max = PI * 2.0 / 45.0 * (speed + 1.0);
 		if self.body.color.is_empty() {
-			let purple = (speed * 180.0).round() as i32;
-			let green = ((1.0 - speed) * 180.0).round() as i32;
-			self.body.color = format!("rgb({},{},{})", purple, green, purple);
+			self.reset_color();
 		}
+	}
+
+	pub fn reset_color(&mut self) {
+		let speed = self.angular_speed.max * 45.0 / (PI * 2.0) - 1.0;
+		let purple = (speed * 180.0).round() as i32;
+		let green = ((1.0 - speed) * 180.0).round() as i32;
+		self.body.color = format!("rgb({},{},{})", purple, green, purple);
 	}
 
 	pub fn set_all_initial(&mut self, canvas: &Canvas) {
