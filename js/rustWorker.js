@@ -50,9 +50,11 @@ function loopFrame(callback, preCallback, start = performance.now()) {
 	requestAnimationFrame(() => {
 		const time = performance.now()
 		callback(time - start, FIELD_OF_VIEW)
-		loopFrame(callback, preCallback, time)
-		if(TIE_UPDATES_TO_FRAMES)
-			preCallback(time - start)
+		setTimeout(() => {
+			if(TIE_UPDATES_TO_FRAMES)
+				preCallback(time - start)
+			loopFrame(callback, preCallback, time)
+		}, 0)
 	})
 }
 
