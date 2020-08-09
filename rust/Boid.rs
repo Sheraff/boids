@@ -227,7 +227,6 @@ impl Boid {
 		boids
 			.clone()
 			.iter()
-			// .into_iter()
 			.filter(|boid| self.id != boid.id && self.test_point_visibility(&boid.point, side))
 			.map(|&boid| boid)
 			.collect()
