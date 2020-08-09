@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[path = "boid.rs"]
+#[path = "Boid.rs"]
 mod boid;
 
 pub struct Universe {
