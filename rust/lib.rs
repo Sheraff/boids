@@ -24,6 +24,15 @@ pub fn console_log(s: &str) {
 	log(s);
 }
 
+#[wasm_bindgen(module = "/interop.js")]
+extern "C" {
+	#[wasm_bindgen(js_name = sendMessage)]
+	fn send_message(s: &str);
+	
+	#[wasm_bindgen(js_name = sendMessage)]
+    fn send_key_value(s: &str, v: f64);
+}
+
 
 static mut UNIVERSE: Option<universe::Universe> = None;
 
@@ -31,8 +40,8 @@ static mut UNIVERSE: Option<universe::Universe> = None;
 pub fn send_context(ctx: web_sys::CanvasRenderingContext2d, height: f64, width: f64) {
 	unsafe {
 		UNIVERSE = Some(universe::Universe::new(ctx, height, width));
-		
 	}
+	send_message("coucou interop");
 }
 
 #[wasm_bindgen]
@@ -52,5 +61,5 @@ pub fn request_frame(delta_time: f64) {
 
 #[wasm_bindgen(start)]
 pub fn main() {
-    log("alive !!");
+	log("alive !!");
 }

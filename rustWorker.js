@@ -2,6 +2,11 @@ import * as wasm from "./pkg/boids.js"
 
 let ctx
 
+const channel = new BroadcastChannel('wasm interop')
+channel.onmessage = ({data}) => {
+	console.log(...data.args)
+}
+
 function onCanvasMessage(resolve) {
 	function onMessage(event) {
 		if('canvas' in event.data) {

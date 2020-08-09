@@ -1,3 +1,4 @@
+import { sendMessage } from './snippets/boids-6a13923adc7ef46f/interop.js';
 
 let wasm;
 
@@ -190,6 +191,9 @@ async function init(input) {
     };
     imports.wbg.__wbg_log_e17bcc3986731314 = function(arg0, arg1) {
         console.log(getStringFromWasm0(arg0, arg1));
+    };
+    imports.wbg.__wbg_sendMessage_131ead568d0656dc = function(arg0, arg1) {
+        sendMessage(getStringFromWasm0(arg0, arg1));
     };
     imports.wbg.__wbg_setfillStyle_c05ba2508c693321 = function(arg0, arg1) {
         getObject(arg0).fillStyle = getObject(arg1);
