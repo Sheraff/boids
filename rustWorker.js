@@ -2,11 +2,8 @@ import * as wasm from "./pkg/boids.js"
 
 let ctx
 
-console.log("lizjvlzjbrv")
-
 function onCanvasMessage(resolve) {
 	function onMessage(event) {
-		console.log("ou")
 		if('canvas' in event.data) {
 			const canvas = event.data.canvas
 			ctx = canvas.getContext('2d')
@@ -23,8 +20,8 @@ const ready = Promise.all([
 ])
 
 ready.then(() => {
-	console.log('READY', wasm, ctx)
-	wasm.console_log('jean michel')
+	console.log(wasm, ctx)
+	wasm.console_log('READY')
 	wasm.send_context(ctx, ctx.canvas.height, ctx.canvas.width)
 	const count = wasm.get_boids_count()
 	postMessage({count})

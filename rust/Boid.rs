@@ -50,18 +50,6 @@ struct Body {
 static mut ID_COUNT: u32 = 0;
 
 #[derive(Clone)]
-pub struct Boid {
-	pub id: u32,
-	pub point: Point,
-	pub vision: Cone,
-	angle: Angle,
-	weight: f64,
-	angular_speed: Speed,
-	linear_speed: Speed,
-	body: Body
-}
-
-#[derive(Clone)]
 struct Angle {
 	value: f64
 }
@@ -85,6 +73,24 @@ impl Angle {
 			value % (PI * 2.0)
 		}
 	}
+}
+
+enum Side {
+	Both,
+	Left,
+	Right
+}
+
+#[derive(Clone)]
+pub struct Boid {
+	pub id: u32,
+	pub point: Point,
+	pub vision: Cone,
+	angle: Angle,
+	weight: f64,
+	angular_speed: Speed,
+	linear_speed: Speed,
+	body: Body
 }
 
 impl Boid {
@@ -178,11 +184,27 @@ impl Boid {
 		self.linear_speed.value += 0.03 * delta_time;
 		
 		// environment update speeds
-		let visible_points = self.filter_points_by_visibility(boids);
 		let (sees_wall, wall_angle, wall_distance) = self.test_wall_visibility(canvas);
 		if sees_wall {
 			self.angular_speed.value += wall_angle.signum() / wall_distance * 2.0 * delta_time;
 			self.linear_speed.value -= 0.03 * wall_distance / self.vision.radius * delta_time;
+		}
+
+		let visible_points = self.filter_points_by_visibility(boids, &Side::Both);
+		let (too_close, direction) = self.find_closest_direction(&visible_points);
+		if too_close {
+			self.angular_speed.value += direction * 0.2 * delta_time;
+			self.linear_speed.value -= 0.03 * delta_time;
+		}
+
+		let (sees_group, angle, count) = self.find_group_direction(&visible_points);
+		if sees_group && count > 4 {
+			self.angular_speed.value += angle.signum() * 0.07 * delta_time;
+		}
+
+		let (sees_group, direction) = self.find_density_direction(&visible_points);
+		if sees_group {
+			self.angular_speed.value += direction * 0.02 * delta_time;
 		}
 		
 		// cap speeds
@@ -201,17 +223,17 @@ impl Boid {
 		self.update_drawing_angle(delta_time);
 	}
 
-	fn filter_points_by_visibility<'a>(&self, boids: &Vec<&'a Boid>) -> Vec<&'a Boid> {
+	fn filter_points_by_visibility<'a>(&self, boids: &Vec<&'a Boid>, side: &Side) -> Vec<&'a Boid> {
 		boids
 			.clone()
 			.iter()
 			// .into_iter()
-			.filter(|boid| self.test_point_visibility(&boid.point))
+			.filter(|boid| self.id != boid.id && self.test_point_visibility(&boid.point, side))
 			.map(|&boid| boid)
 			.collect()
 	}
 
-	fn test_point_visibility(&self, point: &Point) -> bool {
+	fn test_point_visibility(&self, point: &Point, side: &Side) -> bool {
 		let dx = self.point.x - point.x;
 		let dy = self.point.y - point.y;
 	
@@ -223,7 +245,73 @@ impl Boid {
 		let angle = angle_from_deltas(dx, dy);
 		let delta_angle = (PI * 2.0 - self.angle.get() + angle) % (PI * 2.0);
 	
-		delta_angle < self.vision.radians / 2.0 || delta_angle > PI * 2.0 - self.vision.radians / 2.0
+		match side {
+			Side::Both => delta_angle < self.vision.radians / 2.0 || delta_angle > PI * 2.0 - self.vision.radians / 2.0,
+			Side::Left => delta_angle < self.vision.radians / 2.0,
+			Side::Right => delta_angle > PI * 2.0 - self.vision.radians / 2.0
+		}
+	}
+
+	/// Of the Boids too close, are there more on the Left or on the Right
+	/// return direction in which to turn to get away
+	fn find_closest_direction(&self, boids: &Vec<&Boid>) -> (bool, f64) {
+		let too_close: Vec<&Boid> = boids
+			.iter()
+			.filter(|boid| {
+				let distance = ((boid.point.x - self.point.x).powi(2) + (boid.point.y - self.point.y).powi(2)).sqrt();
+				distance < self.body.size + boid.body.size
+			})
+			.map(|&boid| boid)
+			.collect();
+		if too_close.len() == 0 {
+			return (false, 0.0)
+		}
+
+		let too_close_left: Vec<&Boid> = too_close.iter().filter(|boid| self.test_point_visibility(&boid.point, &Side::Left)).map(|&boid| boid).collect();
+		let too_close_right: Vec<&Boid> = too_close.iter().filter(|boid| self.test_point_visibility(&boid.point, &Side::Right)).map(|&boid| boid).collect();
+		if too_close_left.len() == 0 && too_close_right.len() == 0 {
+			return (false, 0.0)
+		}
+
+		let left_weight = too_close_left.iter().fold(0.0, |sum, x| sum + x.weight);
+		let right_weight = too_close_right.iter().fold(0.0, |sum, x| sum + x.weight);
+
+		(true, (right_weight - left_weight).signum())
+	}
+
+	/// Average angle of a vector of Boids
+	fn find_group_direction(&self, boids: &Vec<&Boid>) -> (bool, f64, usize) {
+		let length = boids.len();
+		if boids.len() == 0 {
+			return (false, 0.0, 0)
+		}
+
+		let total_weight = boids.iter().fold(0.0, |sum, x| sum + x.weight);
+		let atan2_x = boids.iter().fold(0.0, |sum, x| sum + x.angle.get().sin() * x.weight) / total_weight;
+		let atan2_y = boids.iter().fold(0.0, |sum, x| sum + x.angle.get().cos() * x.weight) / total_weight;
+		let angle_mean = atan2_x.atan2(atan2_y);
+
+		let lesser_diff = angle_mean - self.angle.get();
+		let greater_diff = angle_mean + PI * 2.0 - self.angle.get();
+		let return_diff = if lesser_diff.abs() < greater_diff.abs() { lesser_diff } else { greater_diff };
+
+		(true, return_diff, length)
+	}
+
+	/// Are there more Boids on the Left or on the Right 
+	/// return direction in which to turn to get closer
+	fn find_density_direction(&self, boids: &Vec<&Boid>) -> (bool, f64) {
+		let left_view = self.filter_points_by_visibility(boids, &Side::Left);
+		let right_view = self.filter_points_by_visibility(boids, &Side::Right);
+
+		if left_view.len() == 0 && right_view.len() == 0 {
+			return (false, 0.0)
+		}
+
+		let left_weight = left_view.iter().fold(0.0, |sum, x| sum + x.weight);
+		let right_weight = right_view.iter().fold(0.0, |sum, x| sum + x.weight);
+
+		(true, (left_weight - right_weight).signum())
 	}
 
 	fn test_wall_visibility(&self, canvas: &Canvas) -> (bool, f64, f64) {

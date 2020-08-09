@@ -38,13 +38,13 @@ impl Universe {
 		let references: Vec<&boid::Boid> = clone.iter().collect();
 		let (boids_map, boids_cells) = grid_split(&self.canvas, references);
 		let empty = Vec::new();
-		for boid in &mut self.boids {
+		for boid in self.boids.iter_mut() {
 			let boids = match boids_map.get(&boid.id) {
 				Some((col, row)) => &boids_cells[*col][*row],
 				None => &empty
 			};
 			
-			(*boid).update(&self.canvas, &boids, delta_time / 15.0);
+			boid.update(&self.canvas, &boids, delta_time / 15.0);
 		}
 	}
 
