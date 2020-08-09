@@ -277,19 +277,18 @@ class Boid {
 	 * @returns {-1 | 1}
 	 */
 	findClosest(visiblePoints) {
-		const closestLeft = visiblePoints.filter(point => {
-			if(point === this)
-				return false
+		const closest = visiblePoints.filter(point => {
 			const distance = Math.sqrt((point.x - this.x)**2 + (point.y - this.y)**2)
 			return distance < this.size + point.size
-				&& this.testPointVisibility(point, {side: 'left'})
 		})
-		const closestRight = visiblePoints.filter(point => {
-			if(point === this)
-				return false
-			const distance = Math.sqrt((point.x - this.x)**2 + (point.y - this.y)**2)
-			return distance < this.size + point.size
-				&& this.testPointVisibility(point, {side: 'right'})
+		if(!closest.length)
+			return false
+
+		const closestLeft = closest.filter(point => {
+			return this.testPointVisibility(point, {side: 'left'})
+		})
+		const closestRight = closest.filter(point => {
+			return this.testPointVisibility(point, {side: 'right'})
 		})
 
 		if(!closestLeft.length && !closestRight.length)
@@ -317,8 +316,9 @@ class Boid {
 		// }
 
 		// average, weighted by size
-		const atan2X = visiblePoints.reduce((sum, {angle, weight}) => sum + Math.sin(angle) * weight, 0) / visiblePoints.reduce((sum, {weight}) => sum + weight, 0)
-		const atan2Y = visiblePoints.reduce((sum, {angle, weight}) => sum + Math.cos(angle) * weight, 0) / visiblePoints.reduce((sum, {weight}) => sum + weight, 0)
+		const totalWeight = visiblePoints.reduce((sum, {weight}) => sum + weight, 0)
+		const atan2X = visiblePoints.reduce((sum, {angle, weight}) => sum + Math.sin(angle) * weight, 0) / totalWeight
+		const atan2Y = visiblePoints.reduce((sum, {angle, weight}) => sum + Math.cos(angle) * weight, 0) / totalWeight
 
 		const realAngleMean = Math.atan2(atan2X, atan2Y)
 		const angleMinus = realAngleMean - this.angle
