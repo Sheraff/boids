@@ -90,7 +90,7 @@ function init(ctx) {
 		x: 450,
 		y: 100,
 		angle: 0,
-		color: 'orange',
+		color: 'red',
 		weight: 4,
 		speed: 0,
 	})
