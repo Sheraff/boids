@@ -1,30 +1,11 @@
 <link rel="stylesheet" href="style.css">
-<!-- <script src="./js/script.js" type="module"></script> -->
 <script src="./js/wasm.js" type="module"></script>
 <span id="count">0 boids</span>
 <div id="perf">
 	<span id="ups">0 ups</span>
 	<span id="fps">0 fps</span>
 </div>
-<div id="settings">
-	<div>
-		<input type="range" id="direction" name="direction" min="1" max="30" value="7">
-		<label for="direction" data-title="Mimic direction">0.07</label>
-	</div>
-	<div>
-		<input type="range" id="avoidance" name="avoidance" min="1" max="30" value="20">
-		<label for="avoidance" data-title="Avoid others">0.20</label>
-	</div>
-	<div>
-		<input type="range" id="flocking" name="flocking" min="1" max="30" value="2">
-		<label for="flocking" data-title="Create flocks">0.02</label>
-	</div>
-</div>
 <div id="checks">
-	<div>
-		<input type="checkbox" id="debug" name="debug">
-		<label for="debug" data-title="Show grid">false</label>
-	</div>
 	<div>
 		<input type="checkbox" id="tick" name="tick" checked>
 		<label for="tick" data-title="Bind ticks to frames">true</label>
