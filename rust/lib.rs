@@ -52,6 +52,24 @@ pub fn get_boids_count() -> u32 {
 }
 
 #[wasm_bindgen]
+pub fn add_one_boid(x: f64, y: f64) -> u32 {
+	unsafe {
+		let universe = UNIVERSE.as_mut().unwrap();
+		universe.add_one_boid_xy(x, y);
+		universe.boids.len() as u32
+	}
+}
+
+#[wasm_bindgen]
+pub fn set_canvas_dimensions(width: f64, height: f64) {
+	unsafe {
+		let universe = UNIVERSE.as_mut().unwrap();
+		universe.canvas.width = width;
+		universe.canvas.height = height;
+	}
+}
+
+#[wasm_bindgen]
 pub fn request_tick(delta_time: f64) {
 	unsafe {
 		let frames = delta_time / 15.0;

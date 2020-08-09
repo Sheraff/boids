@@ -4,7 +4,7 @@ use std::collections::HashMap;
 mod boid;
 
 pub struct Universe {
-	canvas: boid::Canvas,
+	pub canvas: boid::Canvas,
 	pub boids: Vec<boid::Boid>,
 	context: web_sys::CanvasRenderingContext2d
 }
@@ -53,6 +53,14 @@ impl Universe {
 		for boid in self.boids.iter() {
 			boid.draw(&self.context, false);
 		}
+	}
+
+	pub fn add_one_boid_xy(&mut self, x: f64, y: f64) {
+		let mut boid = boid::Boid::new();
+		boid.set_initial_coordinates(x, y);
+		boid.set_all_initial(&self.canvas);
+		boid.body.color = String::from("red");
+		self.boids.push(boid);
 	}
 }
 

@@ -40,10 +40,10 @@ struct Speed {
 }
 
 #[derive(Clone)]
-struct Body {
+pub struct Body {
 	size: f64,
 	width: f64,
-	color: String,
+	pub color: String,
 	angle: f64
 }
 
@@ -111,7 +111,7 @@ pub struct Boid {
 	weight: f64,
 	angular_speed: Speed,
 	linear_speed: Speed,
-	body: Body,
+	pub body: Body,
 	behaviors: Behaviors
 }
 

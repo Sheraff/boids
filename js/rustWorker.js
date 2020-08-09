@@ -38,6 +38,7 @@ ready.then(() => {
 	wasm.send_context(ctx, ctx.canvas.height, ctx.canvas.width)
 	const count = wasm.get_boids_count()
 	postMessage({count})
+	init(wasm, ctx)
 	loopFrame(wasm.request_frame)
 	loopTick(wasm.request_tick)
 })
@@ -55,4 +56,18 @@ function loopTick(callback, start = performance.now()) {
 		callback(time - start)
 		loopTick(callback, time)
 	}, 1)
+}
+
+function init(wasm, ctx) {
+	self.onmessage = function(event) {
+		if(event.data.new && 'x' in event.data && 'y' in event.data) {
+			const count = wasm.add_one_boid(event.data.x, event.data.y)
+			postMessage({count})
+		}
+		if('height' in event.data || 'width' in event.data) {
+			wasm.set_canvas_dimensions(event.data.width, event.data.height)
+			ctx.canvas.height = event.data.height
+			ctx.canvas.width = event.data.width
+		}
+	}
 }

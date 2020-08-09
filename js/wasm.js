@@ -6,6 +6,8 @@ const worker = new Worker("js/rustWorker.js", { type: "module" })
 const offscreen = canvas.transferControlToOffscreen()
 worker.postMessage({canvas: offscreen}, [offscreen])
 
+window.addEventListener('resize', () => worker.postMessage({height: innerHeight, width: innerWidth}))
+canvas.addEventListener('click', ({x, y}) => worker.postMessage({new: true, x, y}))
 
 let frames = []
 let updates = []
