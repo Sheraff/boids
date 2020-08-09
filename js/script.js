@@ -3,7 +3,7 @@ canvas.height = innerHeight
 canvas.width = innerWidth
 document.body.appendChild(canvas)
 const offscreen = canvas.transferControlToOffscreen()
-const worker = new Worker("/js/offscreencanvas.js")
+const worker = new Worker("js/offscreencanvas.js")
 worker.postMessage({canvas: offscreen}, [offscreen])
 
 window.addEventListener('resize', () => worker.postMessage({height: innerHeight, width: innerWidth}))

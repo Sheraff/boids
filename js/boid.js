@@ -1,4 +1,4 @@
-self.importScripts('/js/median.js')
+self.importScripts('./median.js')
 
 const BOUND = 12.5
 

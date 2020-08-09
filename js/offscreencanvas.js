@@ -1,4 +1,4 @@
-self.importScripts('/js/boid.js')
+self.importScripts('./boid.js')
 
 const DEBUG = false
 const TIE_UPDATES_TO_FRAMES = true
