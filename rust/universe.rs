@@ -20,7 +20,7 @@ impl Universe {
 
 		let mut boids: Vec<boid::Boid> = vec![];
 
-		for _ in 1..200 {
+		for _ in 0..200 {
 			let mut boid = boid::Boid::new();
 			boid.set_all_initial(&canvas);
 			boids.push(boid);
@@ -48,10 +48,10 @@ impl Universe {
 		}
 	}
 
-	pub fn render(&mut self, frames: f64) {
+	pub fn render(&mut self) {
 		self.context.clear_rect(0.0, 0.0, self.canvas.width, self.canvas.height);
-		for boid in self.boids.iter_mut() {
-			boid.draw(&self.canvas, &self.context, frames);
+		for boid in self.boids.iter() {
+			boid.draw(&self.context, false);
 		}
 	}
 }

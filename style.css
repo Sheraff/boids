@@ -10,7 +10,7 @@ canvas {
   object-fit: contain;
 }
 
-#count, #fps {
+#count, #perf {
   position: fixed;
   font-size: 40px;
 }
@@ -20,9 +20,14 @@ canvas {
   right: 10px;
 }
 
-#fps {
+#perf {
   bottom: 10px;
   right: 10px;
+}
+
+#perf span {
+  display: block;
+  text-align: right;
 }
 
 #settings {

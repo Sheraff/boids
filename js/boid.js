@@ -227,7 +227,7 @@ class Boid {
 		let y = this.y
 
 		adjust: {
-			this.angularSpeed *= .9 ** timeMultiplier
+			this.angularSpeed *= .85 ** timeMultiplier
 			this.linearSpeed += .03 * timeMultiplier
 			const visiblePoints = points.filter(point => point !== this && this.testPointVisibility(point))
 
@@ -256,10 +256,10 @@ class Boid {
 
 		this.linearSpeed = Math.max(this.minLinearSpeed, Math.min(this.linearSpeed, this.maxLinearSpeed))
 		this.angularSpeed = Math.sign(this.angularSpeed) * Math.min(this.maxAngularSpeed, Math.abs(this.angularSpeed))
-		this.angle += this.angularSpeed
+		this.angle += this.angularSpeed * timeMultiplier
 
-		x -= Math.sin(this.angle) * this.linearSpeed
-		y -= Math.cos(this.angle) * this.linearSpeed
+		x -= Math.sin(this.angle) * this.linearSpeed * timeMultiplier
+		y -= Math.cos(this.angle) * this.linearSpeed * timeMultiplier
 
 		if(box) {
 			if(x < BOUND) x = BOUND

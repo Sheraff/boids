@@ -47,6 +47,14 @@ struct Body {
 	angle: f64
 }
 
+#[derive(Clone)]
+struct Behaviors {
+	avoid_obstacles: f64,
+	avoid_entity: f64,
+	follow_group: f64,
+	go_to_group: f64
+}
+
 static mut ID_COUNT: u32 = 0;
 
 #[derive(Clone)]
@@ -103,7 +111,8 @@ pub struct Boid {
 	weight: f64,
 	angular_speed: Speed,
 	linear_speed: Speed,
-	body: Body
+	body: Body,
+	behaviors: Behaviors
 }
 
 impl Boid {
@@ -140,6 +149,12 @@ impl Boid {
 				width: 0.0,
 				color: String::new(),
 				angle: 0.0
+			},
+			behaviors: Behaviors {
+				avoid_obstacles: 2.0,
+				avoid_entity: 0.2,
+				follow_group: 0.07,
+				go_to_group: 0.02
 			}
 		}
 	}
@@ -193,31 +208,31 @@ impl Boid {
 
 	pub fn update(&mut self, canvas: &Canvas, boids: &Vec<&Boid>, frames: f64) {
 		// default update speeds
-		self.angular_speed.value *= (0.9_f64).powf(frames);
+		self.angular_speed.value *= (0.85_f64).powf(frames);
 		self.linear_speed.value += 0.03 * frames;
 		
 		// environment update speeds
 		let (sees_wall, wall_angle, wall_distance) = self.test_wall_visibility(canvas);
 		if sees_wall {
-			self.angular_speed.value += wall_angle.signum() / wall_distance * 2.0 * frames;
+			self.angular_speed.value += wall_angle.signum() / wall_distance * self.behaviors.avoid_obstacles * frames;
 			self.linear_speed.value -= 0.03 * wall_distance / self.vision.radius * frames;
 		}
 
 		let visible_points = self.filter_points_by_visibility(boids, &Side::Both);
 		let (too_close, direction) = self.find_closest_direction(&visible_points);
 		if too_close {
-			self.angular_speed.value += direction * 0.2 * frames;
+			self.angular_speed.value += direction * self.behaviors.avoid_entity * frames;
 			self.linear_speed.value -= 0.03 * frames;
 		}
 
 		let (sees_group, angle, count) = self.find_group_direction(&visible_points);
 		if sees_group && count > 4 {
-			self.angular_speed.value += angle.signum() * 0.07 * frames;
+			self.angular_speed.value += angle.signum() * self.behaviors.follow_group * frames;
 		}
 
 		let (sees_group, direction) = self.find_density_direction(&visible_points);
 		if sees_group {
-			self.angular_speed.value += direction * 0.02 * frames;
+			self.angular_speed.value += direction * self.behaviors.go_to_group * frames;
 		}
 		
 		// cap speeds
@@ -225,13 +240,15 @@ impl Boid {
 		self.linear_speed.value = self.linear_speed.value.min(self.linear_speed.max).max(self.angular_speed.min);
 
 		// default update positions
-		self.angle += self.angular_speed.value;
-		self.point.x -= self.angle.sin() * self.linear_speed.value;
-		self.point.y -= self.angle.cos() * self.linear_speed.value;
+		self.angle += self.angular_speed.value * frames;
+		self.point.x -= self.angle.sin() * self.linear_speed.value * frames;
+		self.point.y -= self.angle.cos() * self.linear_speed.value * frames;
 
 		// cap positions
 		self.point.x = self.point.x.max(canvas.padding).min(canvas.width - canvas.padding);
 		self.point.y = self.point.y.max(canvas.padding).min(canvas.height - canvas.padding);
+
+		self.update_drawing_angle(frames);
 	}
 
 	fn filter_points_by_visibility<'a>(&self, boids: &Vec<&'a Boid>, side: &Side) -> Vec<&'a Boid> {
@@ -424,8 +441,10 @@ impl Boid {
 		)
 	}
 
-	pub fn draw(&mut self, canvas: &Canvas, context: &web_sys::CanvasRenderingContext2d, frames: f64) {
-		self.update_drawing_angle(frames);
+	pub fn draw(&self, context: &web_sys::CanvasRenderingContext2d, with_field_of_view: bool) {
+		if with_field_of_view {
+			self.draw_field_of_view(context);
+		}
 		let data = self.get_drawing_data();
 		context.set_fill_style(&JsValue::from_str(&self.body.color));
 		context.begin_path();
@@ -434,6 +453,25 @@ impl Boid {
 		context.line_to((data.2).0, (data.2).1);
 		context.fill();
 
+	}
+
+	fn draw_field_of_view(&self, context: &web_sys::CanvasRenderingContext2d) {
+		let alpha = context.global_alpha();
+		context.set_global_alpha(0.07);
+		context.set_fill_style(&JsValue::from_str(&self.body.color));
+		context.begin_path();
+		context.move_to(self.point.x, self.point.y);
+		let _ = context.arc_with_anticlockwise(
+			self.point.x,
+			self.point.y,
+			self.vision.radius,
+			- self.body.angle + self.vision.radians / 2.0 - PI / 2.0,
+			- self.body.angle - self.vision.radians / 2.0 - PI / 2.0,
+			true
+		);
+		context.move_to(self.point.x, self.point.y);
+		context.fill();
+		context.set_global_alpha(alpha);
 	}
 }
 

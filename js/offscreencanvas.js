@@ -1,6 +1,7 @@
 self.importScripts('/js/boid.js')
 
 const DEBUG = false
+const TIE_UPDATES_TO_FRAMES = true
 
 /** @type HTMLCanvasElement */
 let canvas
@@ -172,6 +173,7 @@ function update(box, boids, deltaTime) {
 		cursor.y = lastY
 		cursor.update({points: map.get(cursor) || allEntities, box, deltaTime})
 	}
+	self.postMessage({update: deltaTime})
 }
 
 /**
@@ -210,10 +212,13 @@ let newFrame = false
  */
 function loopUpdate(ctx, boids, lastTime = performance.now()) {
 	const currentTime = performance.now()
-	setTimeout(() => loopUpdate(ctx, boids, newFrame ? currentTime : lastTime), 8)
-	if(newFrame) {
-		update(ctx.canvas, boids, currentTime - lastTime)
-	}
+	setTimeout(() => {
+		if(!TIE_UPDATES_TO_FRAMES)
+			newFrame = true
+		if(newFrame)
+			update(ctx.canvas, boids, currentTime - lastTime)
+		loopUpdate(ctx, boids, newFrame ? currentTime : lastTime)
+	}, 1)
 	newFrame = false
 }
 

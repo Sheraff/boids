@@ -4,7 +4,15 @@ let ctx
 
 const channel = new BroadcastChannel('wasm interop')
 channel.onmessage = ({data}) => {
-	console.log(...data.args)
+	if(data.args.length === 2) {
+		const [key, value] = data.args
+		if(key === "frame")
+			self.postMessage({frame: value})
+		if(key === "tick")
+			self.postMessage({update: value})
+	} else {
+		console.log(...data.args)
+	}
 }
 
 function onCanvasMessage(resolve) {
@@ -30,13 +38,21 @@ ready.then(() => {
 	wasm.send_context(ctx, ctx.canvas.height, ctx.canvas.width)
 	const count = wasm.get_boids_count()
 	postMessage({count})
-	loop(wasm.request_frame)
+	loopFrame(wasm.request_frame)
+	loopTick(wasm.request_tick)
 })
 
-function loop (callback, start = performance.now()) {
+function loopFrame(callback, start = performance.now()) {
 	requestAnimationFrame((time) => {
 		callback(time - start)
-		loop(callback, time)
-		self.postMessage({frame: time})
+		loopFrame(callback, time)
 	})
+}
+
+function loopTick(callback, start = performance.now()) {
+	setTimeout(() => {
+		const time = performance.now()
+		callback(time - start)
+		loopTick(callback, time)
+	}, 1)
 }

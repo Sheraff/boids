@@ -52,12 +52,20 @@ pub fn get_boids_count() -> u32 {
 }
 
 #[wasm_bindgen]
-pub fn request_frame(delta_time: f64) {
+pub fn request_tick(delta_time: f64) {
 	unsafe {
 		let frames = delta_time / 15.0;
 		UNIVERSE.as_mut().unwrap().tick(frames);
-		UNIVERSE.as_mut().unwrap().render(frames);
 	}
+	send_key_value("tick", delta_time);
+}
+
+#[wasm_bindgen]
+pub fn request_frame(delta_time: f64) {
+	unsafe {
+		UNIVERSE.as_mut().unwrap().render();
+	}
+	send_key_value("frame", delta_time);
 }
 
 #[wasm_bindgen(start)]
