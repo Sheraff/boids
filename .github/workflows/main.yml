@@ -32,4 +32,4 @@ jobs:
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         BRANCH: test # The branch the action should deploy to.
-        FOLDER: dist # The folder the action should deploy.
+        FOLDER: . # The folder the action should deploy.
