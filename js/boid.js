@@ -117,6 +117,15 @@ class Boid {
 		return this._angle
 	}
 
+	resetColor() {
+		const maxAngularSpeedBoost = this.maxAngularSpeed * 45 / (Math.PI * 2) - 1
+		this.color = `rgb(
+			${maxAngularSpeedBoost * 180},
+			${(1 - maxAngularSpeedBoost) * 180},
+			${maxAngularSpeedBoost * 180}
+		)`
+	}
+
 	/**
 	 * @param {CanvasRenderingContext2D} ctx 
 	 * @param {{ withField?: boolean }} options 

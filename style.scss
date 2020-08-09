@@ -28,7 +28,7 @@ canvas {
 	}
 }
 
-#settings {
+#settings, #checks {
 	position: fixed;
 	top: 10px;
 	left: 10px;
@@ -39,4 +39,9 @@ canvas {
 			content: attr(data-title) ': ';
 		}
 	}
+}
+
+#checks {
+	top: initial;
+	bottom: 10px;
 }

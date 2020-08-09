@@ -1,7 +1,8 @@
 self.importScripts('./boid.js')
 
-const DEBUG = false
-const TIE_UPDATES_TO_FRAMES = true
+let DEBUG = false
+let TIE_UPDATES_TO_FRAMES = true
+let FIELD_OF_VIEW = false
 
 /** @type HTMLCanvasElement */
 let canvas
@@ -63,6 +64,20 @@ onmessage = function(event) {
 
 	if('flocking' in event.data) {
 		boids.forEach(boid => boid.behaviors['attraction to group'] = event.data.flocking)
+	}
+
+	if('debug' in event.data) {
+		DEBUG = event.data.debug
+		if(!DEBUG)
+			boids.forEach(boid => boid.resetColor())
+	}
+
+	if('tick' in event.data) {
+		TIE_UPDATES_TO_FRAMES = event.data.tick
+	}
+
+	if('view' in event.data) {
+		FIELD_OF_VIEW = event.data.view
 	}
 }
 
@@ -186,7 +201,7 @@ function draw(ctx, boids) {
 		drawGrid(ctx, boids)
 	}
 	boids.forEach(boid => {
-		boid.draw(ctx)
+		boid.draw(ctx, { withField: FIELD_OF_VIEW })
 	})
 	if(hover) {
 		cursor.x = lastX

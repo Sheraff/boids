@@ -30,16 +30,21 @@ canvas {
   text-align: right;
 }
 
-#settings {
+#settings, #checks {
   position: fixed;
   top: 10px;
   left: 10px;
 }
 
-#settings label {
+#settings label, #checks label {
   background: #FFFFFF88;
 }
 
-#settings label::before {
+#settings label::before, #checks label::before {
   content: attr(data-title) ": ";
+}
+
+#checks {
+  top: initial;
+  bottom: 10px;
 }

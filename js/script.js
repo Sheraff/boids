@@ -16,9 +16,15 @@ void [
 	'direction',
 	'avoidance',
 	'flocking',
+	'debug',
+	'tick',
+	'view'
 ].forEach(key => {
-	document.getElementById(key).addEventListener('input', ({target}) => {
-		const value = target.value / 100
+	const input = document.getElementById(key)
+	input.addEventListener(input.type === "range" ? "input" : "change", ({target}) => {
+		let value = input.type === "range"
+			? target.value / 100
+			: target.checked
 		worker.postMessage({[key]: value})
 		target.nextElementSibling.innerText = value
 	})
