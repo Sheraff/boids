@@ -79,9 +79,9 @@ pub fn request_tick(delta_time: f64) {
 }
 
 #[wasm_bindgen]
-pub fn request_frame(delta_time: f64) {
+pub fn request_frame(delta_time: f64, draw_field_of_view: bool) {
 	unsafe {
-		UNIVERSE.as_mut().unwrap().render();
+		UNIVERSE.as_mut().unwrap().render(draw_field_of_view);
 	}
 	send_key_value("frame", delta_time);
 }

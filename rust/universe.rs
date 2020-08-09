@@ -48,10 +48,10 @@ impl Universe {
 		}
 	}
 
-	pub fn render(&mut self) {
+	pub fn render(&mut self, draw_field_of_view: bool) {
 		self.context.clear_rect(0.0, 0.0, self.canvas.width, self.canvas.height);
 		for boid in self.boids.iter() {
-			boid.draw(&self.context, false);
+			boid.draw(&self.context, draw_field_of_view);
 		}
 	}
 

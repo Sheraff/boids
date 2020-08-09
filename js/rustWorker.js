@@ -1,5 +1,8 @@
 import * as wasm from "../pkg/boids.js"
 
+let DEBUG = false
+let TIE_UPDATES_TO_FRAMES = true
+let FIELD_OF_VIEW = false
 let ctx
 
 const channel = new BroadcastChannel('wasm interop')
@@ -39,21 +42,24 @@ ready.then(() => {
 	const count = wasm.get_boids_count()
 	postMessage({count})
 	init(wasm, ctx)
-	loopFrame(wasm.request_frame)
+	loopFrame(wasm.request_frame, wasm.request_tick)
 	loopTick(wasm.request_tick)
 })
 
-function loopFrame(callback, start = performance.now()) {
+function loopFrame(callback, preCallback, start = performance.now()) {
 	requestAnimationFrame((time) => {
-		callback(time - start)
-		loopFrame(callback, time)
+		callback(time - start, FIELD_OF_VIEW)
+		loopFrame(callback, preCallback, time)
+		if(TIE_UPDATES_TO_FRAMES)
+			preCallback(time - start)
 	})
 }
 
 function loopTick(callback, start = performance.now()) {
 	setTimeout(() => {
 		const time = performance.now()
-		callback(time - start)
+		if(!TIE_UPDATES_TO_FRAMES)
+			callback(time - start)
 		loopTick(callback, time)
 	}, 1)
 }
@@ -64,10 +70,19 @@ function init(wasm, ctx) {
 			const count = wasm.add_one_boid(event.data.x, event.data.y)
 			postMessage({count})
 		}
+
 		if('height' in event.data || 'width' in event.data) {
 			wasm.set_canvas_dimensions(event.data.width, event.data.height)
 			ctx.canvas.height = event.data.height
 			ctx.canvas.width = event.data.width
+		}
+
+		if('tick' in event.data) {
+			TIE_UPDATES_TO_FRAMES = event.data.tick
+		}
+
+		if('view' in event.data) {
+			FIELD_OF_VIEW = event.data.view
 		}
 	}
 }

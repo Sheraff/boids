@@ -9,6 +9,24 @@ worker.postMessage({canvas: offscreen}, [offscreen])
 window.addEventListener('resize', () => worker.postMessage({height: innerHeight, width: innerWidth}))
 canvas.addEventListener('click', ({x, y}) => worker.postMessage({new: true, x, y}))
 
+void [
+	// 'direction',
+	// 'avoidance',
+	// 'flocking',
+	// 'debug',
+	'tick',
+	'view'
+].forEach(key => {
+	const input = document.getElementById(key)
+	input.addEventListener(input.type === "range" ? "input" : "change", ({target}) => {
+		let value = input.type === "range"
+			? target.value / 100
+			: target.checked
+		worker.postMessage({[key]: value})
+		target.nextElementSibling.innerText = value
+	})
+})
+
 let frames = []
 let updates = []
 worker.addEventListener('message', ({data}) => {
