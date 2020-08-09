@@ -26,3 +26,10 @@ jobs:
     - name: Build WASM from Rust sources
       run: |
         wasm-pack build --target web
+        
+    - name: Deploy 🚀
+      uses: JamesIves/github-pages-deploy-action@3.5.9
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: test # The branch the action should deploy to.
+        FOLDER: dist # The folder the action should deploy.
