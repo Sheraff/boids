@@ -39,10 +39,10 @@ impl Universe {
 		let (boids_map, boids_cells) = grid_split(&self.canvas, references);
 		let empty = Vec::new();
 		for boid in self.boids.iter_mut() {
-			let boids = match boids_map.get(&boid.id) {
-				Some((col, row)) => &boids_cells[*col][*row],
-				None => &empty
-			};
+			let boids = boids_map.get(&boid.id).map_or(
+				&empty, 
+				|(col, row)| &boids_cells[*col][*row]
+			);
 			
 			boid.update(&self.canvas, &boids, frames);
 		}
