@@ -399,10 +399,13 @@ class Boid {
 			return returns[0]
 
 		// cheat
-		if(this.x < BOUND * 10 && this.y < BOUND * 10) {
+		if((this.x < BOUND * 10 || this.x > width - BOUND * 10)
+			&& (this.y < BOUND * 10 || this.y > height - BOUND * 10)) {
+			const minX = Math.min(Math.abs(this.x - BOUND), Math.abs(this.x - width + BOUND))
+			const minY = Math.min(Math.abs(this.y - BOUND), Math.abs(this.y - height + BOUND))
 			return {
 				angle: this.angularSpeed, 
-				distance: Math.min(Math.abs(this.x - BOUND), Math.abs(this.y - BOUND))
+				distance: Math.min(minX, minY)
 			}
 		}
 		
@@ -424,15 +427,15 @@ class Boid {
 	 * @param {'left' | 'right'} options.side - side to include in the cone of vision, defaults to 'both'
 	 */
 	testPointVisibility(point, {side} = {}) {
-		const dx = this.x - point.x
-		const dy = this.y - point.y
+		const dx = point.x - this.x
+		const dy = point.y - this.y
 
 		const distance = Math.sqrt(dx**2 + dy**2)
 		if(distance > this.vision.radius)
 			return false
 
 		const angle = this.angleFromDeltas({dx, dy})
-		const deltaAngle = (Math.PI * 2 - this.angle + angle) % (Math.PI * 2)
+		const deltaAngle = (angle - this.angle + Math.PI * 2) % (Math.PI * 2)
 
 		if(side === 'left' && deltaAngle > this.vision.radians / 2) {
 			return false
@@ -451,10 +454,7 @@ class Boid {
 	 * @param {number} vector.dy
 	 */
 	angleFromDeltas({dx, dy}) {
-		// TODO: is this a poor man's atan2?
-		return Math.atan(dx / dy) 
-			+ (dy < 0 ? Math.PI : 0) 
-			+ (dy > 0 && dx < 0 ? Math.PI * 2 : 0)
+		return (Math.atan2(-dy, dx) - Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
 	}
 
 	/**
