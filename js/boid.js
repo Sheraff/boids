@@ -56,7 +56,9 @@ class Boid {
 
 		const maxLinearSpeedBoost = speed ?? Math.random()
 		/** @type {number} */
-		this.maxLinearSpeed = 2 + maxLinearSpeedBoost * 1
+		this.maxLinearSpeed = 1.5 + maxLinearSpeedBoost * 1.5
+		this.speedTicker = 0
+		this.speedIncrementModulo = 500 + maxLinearSpeedBoost * 1000
 
 		/** @type {number} */
 		this.angularSpeed = 0
@@ -75,7 +77,7 @@ class Boid {
 		 */
 		this.behaviors = {
 			'obstacle avoidance': 2,
-			'repulsion from individuals': .2,
+			'repulsion from individuals': .3,
 			'imitation of direction': .07,
 			'attraction to group': .02,
 		}
@@ -237,23 +239,26 @@ class Boid {
 
 		adjust: {
 			this.angularSpeed *= .85 ** timeMultiplier
-			this.linearSpeed += .03 * timeMultiplier
+			// this.linearSpeed += .03 * timeMultiplier
+			this.speedTicker += timeMultiplier
+			this.linearSpeed += .02 * timeMultiplier + Math.abs(Math.sin(this.speedTicker * (Math.PI * 2) / this.speedIncrementModulo)) * 4 * this.maxLinearSpeed / this.speedIncrementModulo
+			this.speedTicker %= this.speedIncrementModulo
 			const visiblePoints = points.filter(point => point !== this && this.testPointVisibility(point))
 
 			const wall = this.testWallVisibility(box)
 			if(wall) {
 				this.angularSpeed += Math.sign(wall.angle || 1) / wall.distance * this.behaviors['obstacle avoidance'] * timeMultiplier
-				this.linearSpeed -= .03 * wall.distance / this.vision.radius * timeMultiplier
+				this.linearSpeed -= .05 * (1 - Math.abs(wall.angle) / Math.PI) * (1 - (wall.distance / this.vision.radius)) * this.behaviors['obstacle avoidance'] * timeMultiplier
 			}
 
 			const tooClose = this.findClosest(visiblePoints)
 			if(tooClose) {
 				this.angularSpeed += tooClose * this.behaviors['repulsion from individuals'] * timeMultiplier
-				this.linearSpeed -= .03 * timeMultiplier
+				this.linearSpeed -= .2 * this.behaviors['repulsion from individuals'] * timeMultiplier
 			}
 
 			const result = this.findGroupDirection(visiblePoints)
-			if(result && result.count > 4) {
+			if(result && result.count > 2) {
 				this.angularSpeed += Math.sign(result.angle) * this.behaviors['imitation of direction'] * timeMultiplier
 			}
 
