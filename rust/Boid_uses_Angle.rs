@@ -234,21 +234,24 @@ impl Boid {
 	}
 
 	fn test_point_visibility(&self, point: &Point, side: &Side) -> bool {
-		let dx = self.point.x - point.x;
-		let dy = self.point.y - point.y;
+		let dx = point.x - self.point.x;
+		let dy = point.y - self.point.y;
 	
 		let distance = dx.powi(2) + dy.powi(2);
 		if distance > self.vision.radius.powi(2) {
 			return false
 		}
 	
-		let angle = angle_from_deltas(dx, dy);
-		let delta_angle = angle - self.angle;
+		let point_angle = Angle::new((-dy).atan2(dx) - PI / 2.0);
+		let delta_angle = point_angle - self.angle;
+
+		let is_right = delta_angle.get() > 2.0 * PI - self.vision.radians.get() / 2.0;
+		let is_left = delta_angle.get() < self.vision.radians.get() / 2.0;
 	
 		match side {
-			Side::Both => delta_angle < self.vision.radians / 2.0 || delta_angle - PI > self.vision.radians / 2.0,
-			Side::Left => delta_angle < self.vision.radians / 2.0,
-			Side::Right => delta_angle - PI > self.vision.radians / 2.0
+			Side::Both => is_left || is_right,
+			Side::Left => is_left,
+			Side::Right => is_right
 		}
 	}
 
@@ -287,14 +290,16 @@ impl Boid {
 		}
 
 		let total_weight = boids.iter().fold(0.0, |sum, x| sum + x.weight);
-		let atan2_x = boids.iter().fold(0.0, |sum, x| sum + x.angle.sin() * x.weight) / total_weight;
-		let atan2_y = boids.iter().fold(0.0, |sum, x| sum + x.angle.cos() * x.weight) / total_weight;
-		let angle_mean = atan2_x.atan2(atan2_y);
-		// let return_diff = angle_mean - self.angle;
+		let avg_x_from_angles = boids.iter().fold(0.0, |sum, x| sum + x.angle.sin() * x.weight) / total_weight;
+		let avg_y_from_angles = boids.iter().fold(0.0, |sum, x| sum + x.angle.cos() * x.weight) / total_weight;
+		
+		let angle_mean = Angle::new((-avg_y_from_angles).atan2(avg_x_from_angles) - PI / 2.0);
+		let return_diff = (angle_mean - self.angle).get();
 
-		let lesser_diff = angle_mean - self.angle.get();
-		let greater_diff = angle_mean - self.angle.get() + PI * 2.0;
-		let return_diff = if lesser_diff.abs() < greater_diff.abs() { lesser_diff } else { greater_diff };
+		// let angle_mean = avg_x_from_angles.atan2(avg_y_from_angles);
+		// let lesser_diff = angle_mean - self.angle.get();
+		// let greater_diff = angle_mean - self.angle.get() + PI * 2.0;
+		// let return_diff = if lesser_diff.abs() < greater_diff.abs() { lesser_diff } else { greater_diff };
 
 
 		(true, return_diff, length)
@@ -357,11 +362,14 @@ impl Boid {
 			return (true, (returns[0].0).signum(), returns[0].1)
 		} else {
 			// cheat
-			if self.point.x < canvas.padding * 10.0 && self.point.y < canvas.padding * 10.0 {
+			if (self.point.x < canvas.padding * 10.0 || self.point.x > canvas.width - canvas.padding * 10.0)
+			&& (self.point.y < canvas.padding * 10.0 || self.point.y > canvas.height - canvas.padding * 10.0) {
+				let min_x = (self.point.x - canvas.padding).abs().min((self.point.x - canvas.width + canvas.padding).abs());
+				let min_y = (self.point.y - canvas.padding).abs().min((self.point.y - canvas.height + canvas.padding).abs());
 				return (
 					true,
 					self.angular_speed.value.signum(),
-					(self.point.x - canvas.padding).abs().min((self.point.y - canvas.padding).abs())
+					min_x.min(min_y)
 				)
 			}
 
@@ -379,14 +387,16 @@ impl Boid {
 	}
 
 	pub fn update_drawing_angle(&mut self, frames: f64) {
-		let difference = self.angle - self.body.angle;
-		let limit = PI * 2.0 / 45.0 * frames;
-		let capped_diff = if difference.signum() > 0.0 { 
-			difference.min(limit) 
-		} else { 
-			difference.max(PI * 2.0 - limit) 
-		};
-		self.body.angle += capped_diff;
+		// let difference = self.angle - self.body.angle;
+		// let limit = PI * 2.0 / 45.0 * frames;
+		// let capped_diff = if difference.signum() > 0.0 { 
+		// 	difference.min(limit) 
+		// } else { 
+		// 	difference.max(PI * 2.0 - limit) 
+		// };
+		// self.body.angle += capped_diff;
+
+		self.body.angle = self.angle;
 	}
 
 	pub fn get_drawing_data(&self) -> ((f64, f64), (f64, f64), (f64, f64)) {
@@ -443,16 +453,5 @@ impl Boid {
 		context.move_to(self.point.x, self.point.y);
 		context.fill();
 		context.set_global_alpha(alpha);
-	}
-}
-
-fn angle_from_deltas(dx: f64, dy: f64) -> Angle {
-	let unsigned_angle = (dx / dy).atan();
-	if dy < 0.0 {
-		Angle::new(unsigned_angle + PI)
-	} else if dx < 0.0 {
-		Angle::new(unsigned_angle + PI * 2.0)
-	} else {
-		Angle::new(unsigned_angle)
 	}
 }
