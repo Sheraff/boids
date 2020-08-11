@@ -43,9 +43,9 @@ impl Angle {
 	fn modulo(value: f64) -> f64 {
 		let mut modulated = value;
 		while modulated < 0.0 {
-			modulated += PI * 2.0
+			modulated += PI * 2.0;
 		}
-		value % (PI * 2.0)
+		modulated % (PI * 2.0)
 	}
 }
 impl std::ops::Add<f64> for Angle {
@@ -71,6 +71,7 @@ impl std::ops::AddAssign<f64> for Angle {
 		self.value = Angle::modulo(self.value + other);
 	}
 }
+
 impl std::ops::Sub<f64> for Angle {
 	type Output = Angle;
 	fn sub(self, other: f64) -> Self::Output {
@@ -83,7 +84,6 @@ impl std::ops::Sub<Angle> for f64 {
 		Angle::new(self - other.value)
 	}
 }
-
 impl std::ops::Sub<Angle> for Angle {
 	type Output = Angle;
 	fn sub(self, other: Angle) -> Self::Output {
@@ -95,6 +95,7 @@ impl std::ops::SubAssign<f64> for Angle {
 		self.value = Angle::modulo(self.value - other);
 	}
 }
+
 impl std::ops::Div<Angle> for Angle {
 	type Output = Angle;
 	fn div(self, other: Angle) -> Self::Output {
@@ -107,6 +108,19 @@ impl std::ops::Div<f64> for Angle {
 		Angle::new(self.value / other)
 	}
 }
+impl std::ops::Mul<f64> for Angle {
+	type Output = Angle;
+	fn mul(self, other: f64) -> Self::Output {
+		Angle::new(self.value * other)
+	}
+}
+impl std::ops::Mul<Angle> for f64 {
+	type Output = Angle;
+	fn mul(self, other: Angle) -> Self::Output {
+		Angle::new(self * other.value)
+	}
+}
+
 impl std::ops::Neg for Angle {
 	type Output = Angle;
 	fn neg(self) -> Self::Output {
@@ -115,7 +129,12 @@ impl std::ops::Neg for Angle {
 }
 impl PartialEq<f64> for Angle {
 	fn eq(&self, other: &f64) -> bool {
-		self.value == *other
+		self.value == Angle::modulo(*other)
+	}
+}
+impl PartialEq<Angle> for f64 {
+	fn eq(&self, other: &Angle) -> bool {
+		Angle::modulo(*self) == other.value
 	}
 }
 impl PartialEq<Angle> for Angle {
@@ -133,7 +152,7 @@ impl PartialOrd<f64> for Angle {
 		} else {
 			Some(Ordering::Equal)
 		}
-    }
+	}
 }
 impl PartialOrd<Angle> for Angle {
 	fn partial_cmp(&self, other: &Angle) -> Option<Ordering> {
@@ -144,5 +163,11 @@ impl PartialOrd<Angle> for Angle {
 		} else {
 			Some(Ordering::Equal)
 		}
-    }
+	}
+}
+
+impl std::fmt::Display for Angle {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.value)
+	}
 }
