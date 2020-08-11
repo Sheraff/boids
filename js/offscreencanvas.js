@@ -199,6 +199,8 @@ function draw(ctx, boids) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 	if(DEBUG) {
 		drawGrid(ctx, boids)
+		drawConnections(ctx, boids[0], boids)
+		boids[0].draw(ctx, { withField: true })
 	}
 	boids.forEach(boid => {
 		boid.draw(ctx, { withField: FIELD_OF_VIEW })
@@ -297,5 +299,15 @@ function drawGrid(ctx, boids, color = 'black') {
 		ctx.lineTo(width, maxVisionRange * i)
 		ctx.stroke()
 	}
+}
 
+function drawConnections(ctx, boid, boids, color = 'green') {
+	const visiblePoints = boids.filter(point => point !== boid && boid.testPointVisibility(point))
+	ctx.strokeStyle = color
+	visiblePoints.forEach((point) => {
+		ctx.beginPath()
+		ctx.moveTo(boid.x, boid.y)
+		ctx.lineTo(point.x, point.y)
+		ctx.stroke()
+	})
 }
