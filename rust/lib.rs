@@ -1,6 +1,8 @@
 use wasm_bindgen::prelude::*;
 mod universe;
 
+use std::cell::RefCell;
+
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]
@@ -36,56 +38,63 @@ extern "C" {
 	fn send_key_value(s: &str, v: f64);
 }
 
-
-static mut UNIVERSE: Option<universe::Universe> = None;
+thread_local! {
+	pub static UNIVERSE: RefCell<Option<universe::Universe>> = RefCell::new(None);
+}
 
 #[wasm_bindgen]
 pub fn send_context(ctx: web_sys::CanvasRenderingContext2d, width: f64, height: f64) {
-	unsafe {
-		UNIVERSE = Some(universe::Universe::new(ctx, width, height));
-	}
+	UNIVERSE.with(|universe| {
+		*universe.borrow_mut() = Some(universe::Universe::new(ctx, width, height));
+	});
 	send_message("coucou interop");
 }
 
 #[wasm_bindgen]
 pub fn get_boids_count() -> u32 {
-	unsafe {
-		UNIVERSE.as_mut().unwrap().boids.len() as u32
-	}
+	UNIVERSE.with(|universe| {
+		universe.borrow().as_ref().unwrap().boids.len() as u32
+	})
 }
 
 #[wasm_bindgen]
 pub fn add_one_boid(x: f64, y: f64) -> u32 {
-	unsafe {
-		let universe = UNIVERSE.as_mut().unwrap();
+	UNIVERSE.with(|universe| {
+		let mut option = universe.borrow_mut();
+		let universe = option.as_mut().unwrap();
 		universe.add_one_boid_xy(x, y);
 		universe.boids.len() as u32
-	}
+	})
 }
 
 #[wasm_bindgen]
 pub fn set_canvas_dimensions(width: f64, height: f64) {
-	unsafe {
-		let universe = UNIVERSE.as_mut().unwrap();
+	UNIVERSE.with(|universe| {
+		let mut option = universe.borrow_mut();
+		let universe = option.as_mut().unwrap();
 		universe.canvas.width = width;
 		universe.canvas.height = height;
-	}
+	})
 }
 
 #[wasm_bindgen]
-pub fn request_tick(delta_time: f64) {
-	unsafe {
+pub fn request_tick(delta_time: f64, debug: bool) {
+	UNIVERSE.with(|universe| {
+		let mut option = universe.borrow_mut();
+		let universe = option.as_mut().unwrap();
 		let frames = delta_time / 15.0;
-		UNIVERSE.as_mut().unwrap().tick(frames);
-	}
+		universe.tick(frames, debug);
+	});
 	send_key_value("tick", delta_time);
 }
 
 #[wasm_bindgen]
-pub fn request_frame(delta_time: f64, draw_field_of_view: bool) {
-	unsafe {
-		UNIVERSE.as_mut().unwrap().render(draw_field_of_view);
-	}
+pub fn request_frame(delta_time: f64, draw_field_of_view: bool, debug: bool) {
+	UNIVERSE.with(|universe| {
+		let mut option = universe.borrow_mut();
+		let universe = option.as_mut().unwrap();
+		universe.render(draw_field_of_view, debug);
+	});
 	send_key_value("frame", delta_time);
 }
 

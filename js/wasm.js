@@ -13,7 +13,7 @@ void [
 	// 'direction',
 	// 'avoidance',
 	// 'flocking',
-	// 'debug',
+	'debug',
 	'tick',
 	'view'
 ].forEach(key => {

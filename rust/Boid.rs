@@ -482,6 +482,17 @@ impl Boid {
 		context.fill();
 		context.set_global_alpha(alpha);
 	}
+
+	pub fn draw_connections(&self, context: &web_sys::CanvasRenderingContext2d, boids: &Vec<&Boid>) {
+		let visible = self.filter_points_by_visibility(boids, &Side::Both);
+		context.set_stroke_style(&JsValue::from_str("green"));
+		visible.iter().for_each(|boid| {
+			context.begin_path();
+			context.move_to(self.point.x, self.point.y);
+			context.line_to(boid.point.x, boid.point.y);
+			context.stroke();
+		});
+	}
 }
 
 fn angle_from_deltas(dx: f64, dy: f64) -> f64 {

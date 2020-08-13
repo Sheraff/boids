@@ -1,5 +1,6 @@
 import * as wasm from "../pkg/boids.js"
 
+let DEBUG = false
 let TIE_UPDATES_TO_FRAMES = true
 let FIELD_OF_VIEW = false
 let ctx
@@ -48,20 +49,25 @@ ready.then(() => {
 function loopFrame(callback, preCallback, start = performance.now()) {
 	requestAnimationFrame(() => {
 		const time = performance.now()
-		callback(time - start, FIELD_OF_VIEW)
-		setTimeout(() => {
-			if(TIE_UPDATES_TO_FRAMES)
-				preCallback(time - start)
+		callback(time - start, FIELD_OF_VIEW, DEBUG)
+		if (!DEBUG) {
+			setTimeout(() => {
+				if(TIE_UPDATES_TO_FRAMES)
+					preCallback(time - start, DEBUG)
+				loopFrame(callback, preCallback, time)
+			}, 0)
+		} else {
+			preCallback(time - start, DEBUG)
 			loopFrame(callback, preCallback, time)
-		}, 0)
+		}
 	})
 }
 
 function loopTick(callback, start = performance.now()) {
 	setTimeout(() => {
 		const time = performance.now()
-		if(!TIE_UPDATES_TO_FRAMES)
-			callback(time - start)
+		if(!TIE_UPDATES_TO_FRAMES && !DEBUG)
+			callback(time - start, DEBUG)
 		loopTick(callback, time)
 	}, 1)
 }
@@ -85,6 +91,12 @@ function init(wasm, ctx) {
 
 		if('view' in event.data) {
 			FIELD_OF_VIEW = event.data.view
+		}
+
+		if('debug' in event.data) {
+			DEBUG = event.data.debug
+			// if(!DEBUG)
+			// 	boids.forEach(boid => boid.resetColor())
 		}
 	}
 }

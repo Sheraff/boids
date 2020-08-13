@@ -198,9 +198,9 @@ impl Boid {
 			self.linear_speed.value -= 0.03 * frames;
 		}
 
-		let (sees_group, angle, count) = self.find_group_direction(&visible_points);
+		let (sees_group, angle_direction, count) = self.find_group_direction(&visible_points);
 		if sees_group && count > 4 {
-			self.angular_speed.value += angle.signum() * self.behaviors.follow_group * frames;
+			self.angular_speed.value += angle_direction * self.behaviors.follow_group * frames;
 		}
 
 		let (sees_group, direction) = self.find_density_direction(&visible_points);
@@ -290,17 +290,8 @@ impl Boid {
 		}
 
 		let total_weight = boids.iter().fold(0.0, |sum, x| sum + x.weight);
-		let avg_x_from_angles = boids.iter().fold(0.0, |sum, x| sum + x.angle.sin() * x.weight) / total_weight;
-		let avg_y_from_angles = boids.iter().fold(0.0, |sum, x| sum + x.angle.cos() * x.weight) / total_weight;
-		
-		let angle_mean = Angle::new((-avg_y_from_angles).atan2(avg_x_from_angles) - PI / 2.0);
-		let return_diff = (angle_mean - self.angle).get();
-
-		// let angle_mean = avg_x_from_angles.atan2(avg_y_from_angles);
-		// let lesser_diff = angle_mean - self.angle.get();
-		// let greater_diff = angle_mean - self.angle.get() + PI * 2.0;
-		// let return_diff = if lesser_diff.abs() < greater_diff.abs() { lesser_diff } else { greater_diff };
-
+		let angle_mean = boids.iter().fold(0.0, |sum, x| sum + x.angle.get() * x.weight) / total_weight;
+		let return_diff = (angle_mean - self.angle).signum();
 
 		(true, return_diff, length)
 	}
@@ -387,16 +378,14 @@ impl Boid {
 	}
 
 	pub fn update_drawing_angle(&mut self, frames: f64) {
-		// let difference = self.angle - self.body.angle;
-		// let limit = PI * 2.0 / 45.0 * frames;
-		// let capped_diff = if difference.signum() > 0.0 { 
-		// 	difference.min(limit) 
-		// } else { 
-		// 	difference.max(PI * 2.0 - limit) 
-		// };
-		// self.body.angle += capped_diff;
-
-		self.body.angle = self.angle;
+		let difference = self.angle - self.body.angle;
+		let limit = PI * 2.0 / 45.0 * frames;
+		let capped_diff = if difference.signum() > 0.0 { 
+			difference.min(limit) 
+		} else { 
+			difference.max(PI * 2.0 - limit) 
+		};
+		self.body.angle += capped_diff;
 	}
 
 	pub fn get_drawing_data(&self) -> ((f64, f64), (f64, f64), (f64, f64)) {
@@ -453,5 +442,16 @@ impl Boid {
 		context.move_to(self.point.x, self.point.y);
 		context.fill();
 		context.set_global_alpha(alpha);
+	}
+
+	pub fn draw_connections(&self, context: &web_sys::CanvasRenderingContext2d, boids: &Vec<&Boid>) {
+		let visible = self.filter_points_by_visibility(boids, &Side::Both);
+		context.set_stroke_style(&JsValue::from_str("green"));
+		visible.iter().for_each(|boid| {
+			context.begin_path();
+			context.move_to(self.point.x, self.point.y);
+			context.line_to(boid.point.x, boid.point.y);
+			context.stroke();
+		});
 	}
 }

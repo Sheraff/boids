@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+// #[path = "Boid_uses_Angle.rs"]
 #[path = "Boid.rs"]
 mod boid;
 
@@ -33,7 +34,7 @@ impl Universe {
 		}
 	}
 
-	pub fn tick(&mut self, frames: f64) {
+	pub fn tick(&mut self, frames: f64, debug: bool) {
 		let clone = self.boids.clone();
 		let references: Vec<&boid::Boid> = clone.iter().collect();
 		let (boids_map, boids_cells) = grid_split(&self.canvas, references);
@@ -46,12 +47,23 @@ impl Universe {
 			
 			boid.update(&self.canvas, &boids, frames);
 		}
+
+		if debug {
+			let boid = &mut self.boids[0];
+			let empty = Vec::new();
+			boid.draw_connections(&self.context, &(
+				boids_map.get(&boid.id).map_or(
+					&empty, 
+					|(col, row)| &boids_cells[*col][*row]
+				).to_owned()
+			));
+		}
 	}
 
-	pub fn render(&mut self, draw_field_of_view: bool) {
+	pub fn render(&mut self, draw_field_of_view: bool, debug: bool) {
 		self.context.clear_rect(0.0, 0.0, self.canvas.width, self.canvas.height);
-		for boid in self.boids.iter() {
-			boid.draw(&self.context, draw_field_of_view);
+		for (i, boid) in self.boids.iter().enumerate() {
+			boid.draw(&self.context, draw_field_of_view || (i == 0 && debug));
 		}
 	}
 

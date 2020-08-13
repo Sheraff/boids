@@ -124,7 +124,7 @@ impl std::ops::Mul<Angle> for f64 {
 impl std::ops::Neg for Angle {
 	type Output = Angle;
 	fn neg(self) -> Self::Output {
-		Angle::new(PI * 2.0 - self.value)
+		Angle::new(- self.value)
 	}
 }
 impl PartialEq<f64> for Angle {
