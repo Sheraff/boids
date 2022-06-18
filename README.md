@@ -1,5 +1,9 @@
 # Implementation of [Boids](https://en.wikipedia.org/wiki/Boids)
 
+
+<img width="729" alt="Screen Shot 2022-06-18 at 19 40 31" src="https://user-images.githubusercontent.com/1325721/174450276-1f72fee0-1232-43f2-adfc-8eb2af7269c4.png">
+
+
 Boids is an example of emergent behavior; that is, the complexity of Boids arises from the interaction of individual agents (the boids, in this case) adhering to a set of simple rules. The rules applied in the simplest Boids world are as follows:
 
 - separation: steer to avoid crowding local flockmates
